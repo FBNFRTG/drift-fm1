@@ -1,43 +1,60 @@
-# Felucca
+# DRIFT
 
-[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
+**An ambient instrument for M-VAVE FM-1.** Classic synth sounds, warm basses, pads and plucks, with a repeating generative Euclidean sequencer. Minimal monochrome interface, one sequencer track and eight voices.
 
-## Maintenance Notice
+By **Fabian Freitag**. Based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita / Hügelton Instruments.
 
-What began as a personal experiment grew far beyond my expectations. I’m grateful to everyone who contributed, supported the project, and made music with Felucca.
+[Project website](https://www.fbnfrtg.de/tools/fm1/drift/) · [Play in your browser](https://www.fbnfrtg.de/tools/fm1/drift/webplayer/) · [Install firmware](https://www.fbnfrtg.de/tools/fm1/drift/webplayer/install/) · [Manual](https://www.fbnfrtg.de/tools/fm1/drift/manual.html) · [Releases](https://github.com/FBNFRTG/drift-fm1/releases)
 
-I’ve decided to step back from active development to focus on creating new instruments and music.
+![DRIFT sequencer](web/site/assets/drift-sequence.png)
 
-Felucca will remain available with occasional maintenance, but new features, issue responses, and pull request reviews are not guaranteed.
+## Features
 
-Thank you for everything. I hope you’ll look forward to my next creations.
+- Two oscillators; oscillator 2 starts with OFF. Classic waveforms and three user sample slots.
+- ADSR envelope, resonant filter, assignable LFO and 80 BPM default tempo.
+- Classic, Ping Pong and Reverse delay; Room, Spring, Hall, Space, Shimmer and Submarine reverb.
+- Repeating Euclidean patterns: bars, note count, duration and probability; direction, interval, chaos and timing variations. Editing keeps the transport running.
+- Root, scale and note range; optional scale LEDs and scale-only keyboard.
+- Six-row patch list, favourites, save under a new name, overwrite confirmation and delete confirmation.
+- Browser player, USB-MIDI firmware installer and sample uploader.
 
-## Overview
+## Controls
 
-Multi-engine synthesizer firmware for the M-VAVE FM-1, version 1.6.1. Connect the FM-1 to a computer by USB, open the
-[web installer](https://hugelton.github.io/Felucca/) in Chrome or Edge and press Install; no extra hardware is needed.
-Installing is at your own risk: M-VAVE's updater or the installer's **Return to official V15** takes you back.
-[Try it in your browser](https://hugelton.github.io/Felucca/webapp/try/), no FM-1 needed.
+| Control | Function |
+| --- | --- |
+| HOME / PATCHES | Patch list / select patch; HOME again opens delete confirmation |
+| REC / SAVE | Favourite / save patch |
+| GLO | Oscillator 1 / oscillator 2 |
+| ENV / EDIT / LFO | ADSR / filter / modulation |
+| FX | Sends / space settings / effect types |
+| SCL | Root, scale and range / scale LEDs and scale-only mode |
+| ARP / SEQ | Sequence 1 / sequence 2 |
+| SELECT / ALGORITHM | Tempo / low-pass filter |
+| PLAY / OCT− / OCT+ | Transport / live keyboard octave |
 
-- Install: [web installer](https://hugelton.github.io/Felucca/)
-- Edit: [web editor](https://hugelton.github.io/Felucca/webapp/editor/) ([Felucca-WebApp](https://github.com/hugelton/Felucca-WebApp))
-- Read: the manual and the release notes are in the [wiki](https://github.com/hugelton/Felucca/wiki/Home)
-- Build: [BUILDING.md](BUILDING.md)
-- Related: [Felucca-Engines](https://github.com/hugelton/Felucca-Engines) (the ANALOG, LOFI, TRIO, WHEEL and NOISE engines, MIT; still maintained) ·
-  [felucca-bsp](https://github.com/hugelton/felucca-bsp) (the FM-1 hardware layer)
+See the [English manual](https://www.fbnfrtg.de/tools/fm1/drift/manual.html) or [detailed German notes](README-DRIFT.md).
 
-## AI disclaimer
+## Install and release status
 
-Felucca is developed with the assistance of AI coding agents (code, tests, documentation, translation, maintenance). The
-design, features, sound design and direction are the maintainer's or the community's, and no generative AI is used for music,
-icons or artwork. See [On AI-Assisted Development and Responsibility](https://github.com/hugelton/Felucca/discussions/166).
+Release **0.8**, identity **FM-1_983**, update loader **ota-FM-1_983**. This identity stays fixed across versions.
+Use the `.fwsc` attached to a GitHub release, or the website installer in desktop Chrome or Edge over HTTPS. Keep power and USB connected during installation.
 
-## Credits and licence
+Software build, native synthesis/persistence, WebAssembly and simulated update/loader checks passed for the supplied 0.8 binary. Physical installation, outgoing updates and recovery for this exact release still require verification on a real FM-1 before Firmware Hub submission. Earlier user-tested builds do not replace testing this package.
 
-Free software: [GPL-3.0-only](LICENSE); the Hügelton Sample Pack is CC0 1.0; the engines in `firmware/engines` are MIT
-([Felucca-Engines](https://github.com/hugelton/Felucca-Engines)); the bundled fonts and ported DSP keep their own licences
-([LICENSES/](LICENSES/), [LICENSING.md](LICENSING.md)). Thanks to everyone whose work and contributions are in it: [CREDITS.md](CREDITS.md).
+The 0.8 update retains the DRIFT 0.7 patch/sample storage layout. Other firmwares' projects and samples are not guaranteed compatible. Back up your data before updating or switching firmware.
 
-M-VAVE and FM-1 are trademarks of their respective owners. Felucca is not affiliated with or endorsed by them.
+## Samples
 
-Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+Three slots, each up to approximately 7.38 seconds, mono, 22,050 Hz; stored as 4-bit IMA ADPCM. The [sample uploader](https://www.fbnfrtg.de/tools/fm1/drift/webplayer/samples/) converts supported audio locally. Stereo is downmixed.
+
+## Build and contribute
+
+[Build instructions](BUILDING.md) · [Changes](CHANGES-DRIFT.md) · [Contributing](CONTRIBUTING.md) · [Publishing instructions](PUBLISHING-DE.md)
+
+All engine sources are included directly. Internal `felucca` filenames and symbols are retained where they are build dependencies; they are not a separate product download.
+
+## Licence and credits
+
+DRIFT is distributed under **GPL-3.0-only**, with the third-party licences and notices documented in [LICENSING.md](LICENSING.md), [CREDITS.md](CREDITS.md), [LICENSE](LICENSE) and `LICENSES/`. Preserve these notices when redistributing.
+
+Independent firmware; not affiliated with M-VAVE. [Impressum / Legal notice](https://www.fbnfrtg.de/impressum/).

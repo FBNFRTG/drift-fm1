@@ -22,7 +22,7 @@ Native Firmware-, Audio-, Sample- und simulierte OTA-Protokolltests durchgeführ
 Kein physischer FM-1 wurde hier geflasht; USB-Installation und Sample-Upload sind
 noch nicht am Gerät getestet. Die vollständige Browser-Bedienung wurde nicht
 in einem echten Browser automatisiert geprüft. Vor Einsatz am Gerät zuerst den
-Webplayer ausprobieren. Backup-/Recovery-Hinweise auch in source/BUILDING.md.
+Webplayer ausprobieren. Backup-/Recovery-Hinweise auch in BUILDING.md.
 
 ## Bedienung
 
@@ -117,8 +117,8 @@ jetzt eine neue Bedeutung; diese Einstellungen nach dem Update kontrollieren.
 
 ## Quellcode und Tests
 
-Vollständiger geänderter Quellcode einschließlich Engines liegt in source/.
-Toolchain/SDK nach source/BUILDING.md bereitstellen, dann im source/-Ordner:
+Vollständiger geänderter Quellcode einschließlich Engines liegt im Repository.
+Toolchain/SDK nach BUILDING.md bereitstellen, dann im Repository-Hauptordner:
 
 ```sh
 JIELI_TOOLCHAIN=/pfad/toolchain AC79_SDK=/pfad/sdk sh build.sh
@@ -188,4 +188,4 @@ Speicherlayout und Datensatzgröße bleiben unverändert. Vorhandene Benutzer-Pa
 
 ## Neu in 0.8 — öffentliche Projektseite
 
-Eigene Projektkennung FM-1_983 (Firmware und Paket), ota-FM-1_983 im Update-Loader. Die Kennung bleibt bei Release-Builds stabil. Im Hub-Katalog vom 22.10.2026 war diese Nummer nicht vergeben; keine zentrale Reservierung oder Hub-Freigabe wird behauptet. Kein Wechsel des Patch-/Sample-Speicherlayouts. Website: https://www.fbnfrtg.de/tools/fm1/drift/ .
+Eigene Projektkennung FM-1_983 (Firmware und Paket), ota-FM-1_983 im Update-Loader. Die Kennung bleibt bei Release-Builds stabil. Im Hub-Katalog vom 23.10.2026 war diese Nummer nicht vergeben; keine zentrale Reservierung oder Hub-Freigabe wird behauptet. Kein Wechsel des Patch-/Sample-Speicherlayouts. Website: https://www.fbnfrtg.de/tools/fm1/drift/ .

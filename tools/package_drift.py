@@ -26,16 +26,18 @@ m={'version':VERSION,'product':PRODUCT,'bytes':fw.stat().st_size,'sha256':sha(fw
 (SITE/'webplayer/install/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
 for p in SITE.glob('*.html'):p.write_text(p.read_text().replace('@FW_BYTES@',str(m['bytes'])).replace('@FW_SHA@',m['sha256']))
 DOC=SITE/'docs';DOC.mkdir()
-for name in ['README-DRIFT.md','BUILDING.md','CHANGES-DRIFT.md','LICENSING.md','CREDITS.md']:shutil.copy2(SRC/name,DOC/name)
+for name in ['README.md','README-DRIFT.md','PUBLISHING-DE.md','BUILDING.md','CHANGES-DRIFT.md','LICENSING.md','CREDITS.md']:shutil.copy2(SRC/name,DOC/name)
 LIC=SITE/'licenses';shutil.copytree(SRC/'LICENSES',LIC,dirs_exist_ok=True);shutil.copy2(SRC/'LICENSE',LIC/'GPL-3.0.txt')
 (LIC/'index.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DRIFT — Licence texts</title><link rel="stylesheet" href="../assets/style.css"><main class="wrap prose"><div class="subhero"><a href="../licenses.html">← Licences & credits</a><h1>Licence texts.</h1></div><ul>'+''.join('<li><a href="'+p.name+'">'+html.escape(p.name)+'</a></li>' for p in sorted(LIC.glob('*')) if p.is_file() and p.name!='index.html')+'</ul></main></html>')
+lp=LIC/'index.html'
+lp.write_text(lp.read_text().replace('</main>', '<p><a href="https://www.fbnfrtg.de/impressum/">Impressum / Legal notice</a></p></main>'))
 sourcezip=DL/f'drift-{VERSION}-source.zip'
 # Include the complete checked-in source, engines and sample assets; exclude build output.
 with zipfile.ZipFile(sourcezip,'w',zipfile.ZIP_DEFLATED) as z:
  for p in sorted(SRC.rglob('*')):
   rel=p.relative_to(SRC)
   if p.is_file() and not any(x in rel.parts for x in ('build','.git','__pycache__','.DS_Store')) and not p.name.endswith(('.log','.f32','.pyc')) and not p.name.startswith('drift-tests-'):z.write(p,f'drift-{VERSION}-source/'+str(rel))
-manifest={'name':'DRIFT','version':VERSION,'date':'2026-10-23','author':'Fabian Freitag','device':'M-VAVE FM-1','identity':PRODUCT,'loader_identity':'ota-'+PRODUCT,'license':'GPL-3.0-only','homepage':BASE,'play':BASE+'webplayer/','installer':BASE+'webplayer/install/','firmware':{'url':BASE+'downloads/'+fw.name,'bytes':m['bytes'],'sha256':m['sha256']},'source':{'url':BASE+'downloads/'+sourcezip.name,'bytes':sourcezip.stat().st_size,'sha256':sha(sourcezip)},'image':BASE+'assets/drift-sequence.png','hardware_test_status':'pending for exact release 0.8','software_test_status':'passed; logs included in complete release bundle','compatibility':'DRIFT 0.7 patch and sample layout retained. Other firmware data is not guaranteed compatible.','hub_status':'not submitted; no approval claimed'}
+manifest={'name':'DRIFT','version':VERSION,'date':'2026-10-23','author':'Fabian Freitag','device':'M-VAVE FM-1','identity':PRODUCT,'loader_identity':'ota-'+PRODUCT,'license':'GPL-3.0-only','homepage':BASE,'play':BASE+'webplayer/','installer':BASE+'webplayer/install/','firmware':{'url':BASE+'downloads/'+fw.name,'bytes':m['bytes'],'sha256':m['sha256']},'source':{'url':BASE+'downloads/'+sourcezip.name,'bytes':sourcezip.stat().st_size,'sha256':sha(sourcezip)},'image':BASE+'assets/drift-sequence.png','hardware_test_status':'pending for exact release 0.8','software_test_status':'passed for unchanged 0.8 binaries; see validation logs in complete bundle','compatibility':'DRIFT 0.7 patch and sample layout retained. Other firmware data is not guaranteed compatible.','hub_status':'not submitted; no approval claimed'}
 (SITE/'release.json').write_text(json.dumps(manifest,indent=2)+'\n')
 (SITE/'HUB-INFO.txt').write_text(f'''DRIFT — self-hosted release information
 Author: Fabian Freitag
@@ -61,7 +63,9 @@ Screen 240x240: {BASE}assets/drift-sequence.png
 Wide image: {BASE}assets/drift-cover.png
 License and credits: {BASE}licenses.html
 
-This project is self-hosted without GitHub. Please confirm whether these direct package/source URLs and release.json are sufficient for listing and tracking updates.
+Repository: https://github.com/FBNFRTG/drift-fm1
+Releases: https://github.com/FBNFRTG/drift-fm1/releases
+Attach the firmware .fwsc to a GitHub release after hardware tests.
 
 FM-1_983 was not present in the Hub catalogue checked on 23 October 2026; it is assigned here to DRIFT, not centrally reserved.
 
@@ -124,7 +128,7 @@ im Quellcode aktualisieren und das Website-Paket neu erzeugen; alternativ die Te
 in upload/release.html, upload/index.html, upload/release.json und upload/HUB-INFO.txt anpassen.
 
 Für den Firmware Hub: Angaben in HUB-INFO.txt nach den Tests an zven@thefirmwarehub.com schicken.
-Keine Nachricht wurde automatisch gesendet. Der Betreiber muss der Aufnahme ohne GitHub zustimmen.
+Keine Nachricht wurde automatisch gesendet. Das GitHub-Repository ist https://github.com/FBNFRTG/drift-fm1 . Die .fwsc muss als Release-Anhang veröffentlicht werden.
 Die Kennung war am 23.10.2026 im Hub-Katalog nicht belegt; keine zentrale Reservierung.
 
 Speicherlayout unverändert gegenüber DRIFT 0.7. Andere Firmwares können Nutzerdaten
