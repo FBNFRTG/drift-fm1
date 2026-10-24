@@ -22,9 +22,9 @@ Vorher den bisherigen Ordner /tools/fm1/drift/ als Sicherung herunterladen. Dana
 
 ## GitHub Release
 
-Nach den Hardwaretests einen Release v0.8 mit Titel DRIFT 0.8 erstellen (falls er schon existiert, den passenden Release bearbeiten). Als Assets web/downloads/drift-fm1-0.8.fwsc und web/downloads/drift-0.8-source.zip anhängen. Die ZIP-Datei ersetzt nicht den lesbaren Quellcode im Repository. Ein bestehender unveränderlicher Release lässt sich gegebenenfalls nicht ändern; dann eine neue Version erstellen und alle Versionsangaben konsistent aktualisieren.
+Nach den Hardwaretests einen Release v0.9 mit Titel DRIFT 0.9 erstellen (falls er schon existiert, den passenden Release bearbeiten). Als Assets web/downloads/drift-fm1-0.9.fwsc und web/downloads/drift-0.9-source.zip anhängen. Die ZIP-Datei ersetzt nicht den lesbaren Quellcode im Repository. Ein bestehender unveränderlicher Release lässt sich gegebenenfalls nicht ändern; dann eine neue Version erstellen und alle Versionsangaben konsistent aktualisieren.
 
-Das Firmware-Binary ist gegenüber der vorigen Lieferung unverändert. Es wurde nur die Dokumentation und die Verzeichnisstruktur bereinigt. Identity: FM-1_983, Loader: ota-FM-1_983. Keine neuen Hardwaretests werden behauptet.
+Firmware und Webplayer wurden für 0.9 neu gebaut. Vor Veröffentlichung auf dem echten FM-1 testen. Identity: FM-1_983, Loader: ota-FM-1_983. Keine neuen Hardwaretests werden behauptet.
 
 ## Aufgeräumt
 

@@ -74,9 +74,13 @@ static void fx_tests(void){
   for(int j=0;j<3;j++)power[j]=re[j]*re[j]+im[j]*im[j];assert(power[down?0:2]>power[1]*10);
  }
  // UI page 3 routes every knob and saves the reverb type.
- drift_page=D_HOME;tap(B_FX);tap(B_FX);tap(B_FX);assert(drift_page==D_TYPES);
- web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
- assert(trk[0].p[P_DDELAY]==2&&song.g[G_RTYPE]==5&&trk[0].p[P_DCOLOR]==127&&trk[0].p[P_DMOD]==127);screen_file("build/drift-fx-types.ppm");
+ drift_page=D_HOME;tap(B_FX);assert(drift_page==D_FX);
+ web_enc(EN_K1,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
+ assert(trk[0].p[P_DLY]==127 && song.g[G_DFDBK]==120 && trk[0].p[P_DDELAY]==2);screen_file("build/drift-delay.ppm");
+ tap(B_FX);assert(drift_page==D_SPACE);web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
+ assert(trk[0].p[P_REV]==127 && song.g[G_RSIZE]==127 && song.g[G_RTYPE]==5 && trk[0].p[P_DCOLOR]==127);screen_file("build/drift-reverb.ppm");
+ tap(B_FX);assert(drift_page==D_TYPES);web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
+ assert(trk[0].p[P_CHOR]==127 && song.g[G_RDAMP]==127 && trk[0].p[P_DMOD]==127 && trk[0].p[P_LEVEL]==127);screen_file("build/drift-misc.ppm");
  // Worst controls, eight voices, all 18 type combinations: bounded audio.
  for(int dt=0;dt<3;dt++)for(int rt=0;rt<6;rt++){
   drift_load(17);trk[0].p[P_DDELAY]=dt;song.g[G_RTYPE]=rt;trk[0].p[P_DMOD]=127;song.g[G_RSIZE]=127;song.g[G_DFDBK]=120;trk[0].p[P_REV]=127;trk[0].p[P_DLY]=127;

@@ -14,7 +14,7 @@ static const char *const N_DIV[] = {"1/4", "1/8", "1/16", "1/32", "8T", "16T", "
 /* the delay's TIME (G_DTIME): N_DIV's ten (their values kept), then 1.5.1's dotted ones appended (stored values:
  * append-only). A list of its own: ARP RATE, SEQ DIV and LFO SYNC keep N_DIV's ten (fx.c delay_samples) */
 static const char *const N_DTIME[] = {"1/4", "1/8", "1/16", "1/32", "8T", "16T", "1/2", "1/1", "2BAR", "4BAR",
-                                      "1/8D", "1/16D", "1/4D"};
+                                      "1/8D", "1/16D", "1/4D", "1/2D", "1/1D", "1/4T", "1/2T", "1/1T"};
 static const char *const N_SCALE[] = {"CHR", "MAJ", "MIN", "DOR", "MIX", "PEN", "MPEN", "HARM",
                                     "PHRY", "LYD", "LOC", "MEL", "BLUES", "WHOLE", "DIMHW", "DIMWH"};
 static const char *const N_ONOFF[] = {"OFF", "ON"};
@@ -83,7 +83,7 @@ static const char *const N_ENGNAME[] = {"ANALOG", FELUCCA_FM4 ? "DIGITAL" : "-",
 static const param_desc_t TP[P_COUNT] = {
     [P_DR0] = PD("SIZE", F_INT, 0, 127, 100),
     [P_DR1] = PD("DAMP", F_INT, 0, 127, 72),
-    [P_DR2] = PD("TIME", F_INT, 0, 12, 1),
+    [P_DR2] = PD("TIME", F_INT, 0, 17, 1),
     [P_DR3] = PD("FDBK", F_INT, 0, 120, 60),
     [P_DR4] = PD("BPM", F_INT, 40, 240, 80),
     [P_DR5] = PD("TYPE", F_INT, 0, 5, 2),
@@ -93,9 +93,9 @@ static const param_desc_t TP[P_COUNT] = {
     [P_DNOTES] = PD("NOTES", F_INT, 1, 32, 8),
     [P_DDUR] = PD("DUR", F_INT, 1, 64, 8),
     [P_DPROB] = PD("PROB", F_INT, 0, 100, 100),
-    [P_DPITCH] = PD("DIRECTION", F_INT, 0, 21, 0),
-    [P_DOCT] = PD("INTERVAL", F_INT, 0, 7, 0),
-    [P_DRHYTHM] = PD("CHAOS", F_INT, 0, 100, 0),
+    [P_DPITCH] = PD("DIRECTION", F_INT, 0, 63, 0),
+    [P_DOCT] = PD("INTERVAL", F_INT, 0, 15, 0),
+    [P_DRHYTHM] = PD("CHAOS", F_INT, 0, 999, 0),
     [P_DRATE] = PD("TIME", F_INT, 0, 100, 0),
 
     [P_LEVEL] = PD("LVL", F_DB, 0, 127, 104),

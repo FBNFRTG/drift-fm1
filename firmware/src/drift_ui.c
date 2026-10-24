@@ -8,28 +8,29 @@ static uint8_t drift_page, drift_dirty, drift_ready;
 static int drift_row;
 static uint32_t drift_draw_ms,drift_overlay_ms;
 static uint8_t drift_overlay;
-static const char *const D_TITLE[]={"PATCHES","OSCILLATOR 1","FILTER","ENVELOPE","MODULATION","EFFECTS","SPACE","SCALE","SEQUENCE 1","SEQUENCE 2","OSCILLATOR 2","SCALE KEYS","FX TYPES"};
+static const char *const D_TITLE[]={"PATCHES","OSCILLATOR 1","FILTER","ENVELOPE","MODULATION","DELAY","REVERB","SCALE","SEQUENCE 1","SEQUENCE 2","OSCILLATOR 2","SCALE KEYS","MISC"};
 static const uint8_t D_PARAMS[][4]={
  {P_E4,P_E5,P_ATK,P_REL},{P_E0,P_E1,P_E2,P_DLV1},{P_E4,P_E5,P_ED_FLT,P_E6},
  {P_ATK,P_DEC,P_SUS,P_REL},{P_LRATE,P_LD_FLT,P_DDEST,P_LD_AMP},
- {P_CHOR,P_DLY,P_REV,P_LEVEL},{G_RSIZE,G_RDAMP,G_DTIME,G_DFDBK},
+ {P_DLY,P_DR2,P_DR3,P_DDELAY},{P_REV,P_DR0,P_DR5,P_DCOLOR},
  {P_ROOT,P_SCALE,P_DMIN,P_DMAX},{P_DLEN,P_DNOTES,P_DDUR,P_DPROB},
  {P_DPITCH,P_DOCT,P_DRHYTHM,P_DRATE},
- {P_D2W,P_D2T,P_D2LV,255},{P_DLED,P_DONLY,255,255},{P_DDELAY,P_DR5,P_DCOLOR,P_DMOD}
+ {P_D2W,P_D2T,P_D2LV,255},{P_DLED,P_DONLY,255,255},{P_CHOR,P_DR1,P_DMOD,P_LEVEL}
 };
 static const char *const D_LABEL[][4]={
  {"CUT","RES","ATK","REL"},{"WAVE","DETUNE","MIX","LEVEL"},
  {"CUT","RES","ENV","DRIVE"},{"ATTACK","DECAY","SUSTAIN","RELEASE"},
- {"RATE","FILTER","TARGET","DEPTH"},{"CHORUS","DELAY","REVERB","LEVEL"},
- {"SIZE","DAMP","TIME","FDBK"},{"ROOT","SCALE","MIN","MAX"},
+ {"RATE","FILTER","TARGET","DEPTH"},{"DELAY %","TIME","FDBK","TYPE"},
+ {"REVERB %","SIZE","TYPE","TONE"},{"ROOT","SCALE","MIN","MAX"},
  {"BARS","NOTES","DUR /16","PROB %"},{"DIR","INTERVAL","CHAOS","TIME"},
- {"WAVE","TUNE","LEVEL",""},{"LED","SCALE ONLY","",""},{"DELAY","REVERB","TONE","MOTION"}
+ {"WAVE","TUNE","LEVEL",""},{"LED","SCALE ONLY","",""},{"CHORUS","DAMP","MOTION","LEVEL"}
 };
 static const char *const D_DELAYS[]={"CLASSIC","PING PONG","REVERSE"};
 static const char *const D_WAVES[]={"OFF","SAW","SQUARE","TRI","SINE","PULSE"};
 static const char *const D_LFO_TARGETS[]={"VOLUME","DELAY","O2 FREQ","O2 DET"};
 static const param_desc_t *drift_desc(uint32_t id){
  static const param_desc_t delay={.fmt=F_ENUM,.min=0,.max=2,.names=D_DELAYS};
+ if(id>=P_DR0 && id<=P_DR5){static const uint8_t g[]={G_RSIZE,G_RDAMP,G_DTIME,G_DFDBK,G_BPM,G_RTYPE};return &GP[g[id-P_DR0]];}
  if(id==P_DDELAY)return &delay;if(id==P_DR5)return &GP[G_RTYPE];
  static const param_desc_t target={.fmt=F_ENUM,.min=0,.max=3,.names=D_LFO_TARGETS};
  if(id==P_DDEST)return &target;
@@ -187,10 +188,11 @@ static void drift_input(void) {
  s=panel_enc(EN_ALGO);if(s){trk[0].p[P_FTYPE]=0;trk[0].p[P_E4]=(int16_t)clamp(trk[0].p[P_E4]+s,0,127);drift_overlay=1;drift_overlay_ms=fm1_ms;drift_dirty=1;ui.force=1;}
  for(k=0;k<4;k++)if((s=panel_enc(EN_K1+k))!=0){
   uint32_t id=D_PARAMS[drift_page][k];if(id==255)continue;
-  int16_t *v=drift_page==D_SPACE?&song.g[id]:&trk[0].p[id];
-  const param_desc_t *d=drift_page==D_SPACE?&GP[id]:drift_desc(id);
-  *v=(int16_t)clamp(*v+s,d->min,d->max);
-  if(id==P_DR5)song.g[G_RTYPE]=*v;
+  int16_t *v=&trk[0].p[id];
+  const param_desc_t *d=drift_desc(id);
+  if(id==P_DR2){static const uint8_t order[]={3,5,2,4,11,1,15,10,0,16,12,6,17,13,7,14,8,9};int at=0;for(int j=0;j<18;j++)if(order[j]==*v)at=j;*v=order[clamp(at+s,0,17)];}
+  else *v=(int16_t)clamp(*v+s,d->min,d->max);
+  if(id>=P_DR0 && id<=P_DR5)song.g[D_GLOBALS[id-P_DR0]]=*v;
   if(id==P_DDEST)trk[0].p[P_LD_PIT]=0; /* legacy vibrato ends when a new target is chosen */
   if(id==P_E0 || id==P_DONLY || id==P_SCALE || id==P_ROOT)panic_req|=1; /* wave/sample state cannot be shared */
   if(trk[0].p[P_DNOTES]>trk[0].p[P_DLEN]*16)trk[0].p[P_DNOTES]=trk[0].p[P_DLEN]*16;
@@ -290,8 +292,8 @@ static void drift_columns(void){
  uint32_t i;char b[32],v[32];
  for(i=0;i<4;i++){
   uint32_t id=D_PARAMS[drift_page][i],x=8+i*(drift_page==D_SCL2?112:56),width=drift_page==D_SCL2?110:54;if(id==255)continue;
-  const param_desc_t *d=drift_page==D_SPACE?&GP[id]:drift_desc(id);
-  int val=drift_page==D_SPACE?song.g[id]:trk[0].p[id];
+  const param_desc_t *d=drift_desc(id);
+  int val=trk[0].p[id];
   const char *label=D_LABEL[drift_page][i];
   if(drift_page==D_OSC && trk[0].p[P_E0]>=7 && i==2)label="LEVEL";
   draw_text_line(x,49,width,&AF_S,label,65535,0,1);
@@ -300,8 +302,9 @@ static void drift_columns(void){
   else if(id==P_DR5)str_cpy(v,((const char *const[]){"ROOM","SPRING","HALL","SPACE","SHIMMER","SUBMRN"})[clamp(val,0,5)],sizeof v);
   else if(id==P_DDEST)str_cpy(v,D_LFO_TARGETS[clamp(val,0,3)],sizeof v);
   else if(id==P_DMIN||id==P_DMAX){str_cpy(v,N_NOTE[val%12],sizeof v);fmt_int(b,val/12-1);str_cpy(v+str_len(v),b,sizeof v-str_len(v));}
-  else if(id==P_DPITCH){if(!val)str_cpy(v,"ROOT",sizeof v);else{str_cpy(v,val<=7?"UP ":val<=14?"DN ":"UD ",sizeof v);fmt_int(b,(val-1)%7+1);str_cpy(v+3,b,sizeof v-3);}}
-  else if(id==P_DOCT)str_cpy(v,((const char *const[]){"1ST","2ND","3RD","4TH","5TH","6TH","7TH","8VE"})[val&7],sizeof v);
+  else if(id==P_DPITCH){if(!val)str_cpy(v,"ROOT",sizeof v);else{static const char *const modes[]={"UP","DN","UD","DU","BOUNCE","OUT","IN","PEDAL","WALK"};str_cpy(v,modes[clamp((val-1)/7,0,8)],sizeof v);fmt_int(b,(val-1)%7+1);str_cpy(v+str_len(v),b,sizeof v-str_len(v));}}
+  else if(id==P_DOCT)str_cpy(v,((const char *const[]){"1ST","2ND","3RD","4TH","5TH","6TH","7TH","8VE","3/4","3/5","4/5","2/3","TRIAD","5/4","8/3","3/4/5"})[clamp(val,0,15)],sizeof v);
+  else if(id==P_DLY || id==P_REV){fmt_int(v,(val*100+63)/127);str_cpy(v+str_len(v),"%",sizeof v-str_len(v));}
   else if(id==P_E0 && val>=7){fmt_int(v,val-6);str_cpy(b,"SMP ",sizeof b);str_cpy(b+4,v,sizeof b-4);str_cpy(v,b,sizeof v);}
   else {const char *unit;param_format(d,val,v,&unit);if(str_len(v)+str_len(unit)<8)str_cpy(v+str_len(v),unit,sizeof v-str_len(v));}
   draw_text_line(x,69,width,&AF_S,v,65535,0,1);

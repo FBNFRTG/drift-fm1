@@ -2,12 +2,13 @@
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Effects: per-track DIST and INSERT (1.5), then sends into three
  * shared buses (chorus, tempo delay, reverb). Mono buses, stereo dry mix. */
-#define DLY_LEN 65536u           /* 1.49 s: 1/4 fits from 41 BPM, 1/4D from 61, 1/2 from 81 */
+#define DLY_LEN 65536u           /* Fixed RAM; long times decimate only the delay line. */
 /* DRIFT types reuse the delay line; only pitch shifting needs extra memory. */
 static struct {
     int32_t side[CTL], input[CTL], tail[CTL];
     int16_t pitch[2048];
-    uint32_t pw, phase, reverse_pos, reverse_len;
+    uint32_t pw, phase, reverse_pos, reverse_len, factor, tick;
+    int32_t in_lp, out_hold, side_hold, out_lp, side_lp, rev_tone, tone_in[CTL];
     int32_t sub_mid, sub_side;
     uint8_t delay_type, bank;
 } df; /* Main RAM has room; keep the DMA pool's mandatory 8 KiB reserve. */
@@ -238,13 +239,16 @@ static uint32_t div_samples(uint32_t div)
 #include "click.c"                                   /* the metronome's click (after the master: audio.c) */
 
 /* the delay's TIME (params.c N_DTIME): N_DIV's ten (div_samples), then 1.5.1's dotted 1/8D 1/16D 1/4D (10, 11, 12: 3/4,
- * 3/8, 3/2 of a quarter); at most DLY_LEN - 1 samples (1.486 s): 1/4D clamps at 60 BPM and below (1/2 below 81) */
+ * 3/8, 3/2 of a quarter). DRIFT appends longer dotted/triplet values without changing old indices. */
 static const uint8_t DIV_DOT[3] = {2, 3, 1};           /* 3 quarters >> this */
 static uint32_t delay_samples(void)
 {
     uint32_t d = (uint32_t)song.g[G_DTIME];
     uint32_t s = d - 10u < 3u ? (beat_samples() * 3u) >> DIV_DOT[d - 10u] : div_samples(d);
-    return s < 16u ? 16u : s >= DLY_LEN ? DLY_LEN - 1u : s;
+    if(d==13u)s=beat_samples()*3u;
+    else if(d==14u)s=beat_samples()*6u;
+    else if(d>=15u && d<=17u)s=beat_samples()*(2u<<(d-15u))/3u;
+    return s < 16u ? 16u : s;
 }
 
 /* ROOM (G_RTYPE 0): 4 damped combs + 2 allpasses (Freeverb-like, mono), added to out */
@@ -619,15 +623,18 @@ static void fx_buses(const int32_t *cho_in, const int32_t *dly_in, const int32_t
                      uint32_t n)
 {
     uint32_t i, dl = delay_samples();
-    int32_t fb = song.g[G_DFDBK] * 230, col = 2000 + clamp(trk[0].p[P_DCOLOR], 0, 127) * 240;
+    int32_t fb = song.g[G_DFDBK] * 230, col = 18800;
     int32_t dmix = song.g[G_DMIX] * 258;
     int32_t cdepth = song.g[G_CDEPTH] * 6, rt;
     uint32_t cinc = LFO_INC[song.g[G_CRATE] & 127] / CTL;
     uint32_t dt = (uint32_t)clamp(trk[0].p[P_DDELAY], 0, 2);
-    if (dt && dl > 32767u) dl = 32767u;
-    if (dt != df.delay_type || (dt == 2u && df.reverse_len != dl)) {
+    uint32_t capacity=dt?32767u:DLY_LEN-1u;
+    uint32_t factor=(dl+capacity-1u)/capacity;
+    dl=(dl+factor-1u)/factor;
+    if (dt != df.delay_type || factor != df.factor || (dt == 2u && df.reverse_len != dl)) {
         memset(dly_buf, 0, sizeof dly_buf);
         fx.dly_w = 0; fx.dly_lp = 0;
+        df.factor=factor;df.tick=0;df.in_lp=df.out_hold=df.side_hold=df.out_lp=df.side_lp=0;
         df.reverse_pos = 0; df.bank = 0; df.reverse_len = dl; df.delay_type = (uint8_t)dt;
     }
     if (pf.ew1 && fb < THR_FB)
@@ -646,7 +653,9 @@ static void fx_buses(const int32_t *cho_in, const int32_t *dly_in, const int32_t
             y += (c0 + (((c1 - c0) * f) >> 8)) << 1;
         }
         fx.cho_w++;
-        df.side[i] = 0;
+        df.in_lp += (dly_in[i]-df.in_lp)/(int32_t)factor;
+        if(df.tick==0){
+        int32_t chorus=y; y=0;df.side[i]=0;
         if (dt == 2u) { /* Alternating record/play banks: read the last grain backwards. */
             uint32_t pos = df.reverse_pos, base = df.bank * 32768u;
             x = dly_buf[(1u - df.bank) * 32768u + dl - 1u - pos];
@@ -654,7 +663,7 @@ static void fx_buses(const int32_t *cho_in, const int32_t *dly_in, const int32_t
             uint32_t fade = dl / 4u < 220u ? dl / 4u : 220u;
             if (edge < fade) x = x * (int32_t)edge / (int32_t)fade;
             fx.dly_lp += mulq15(x - fx.dly_lp, col);
-            dly_buf[base + pos] = (int16_t)clamp((dly_in[i] >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
+            dly_buf[base + pos] = (int16_t)clamp((df.in_lp >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
             if (++df.reverse_pos >= dl) { df.reverse_pos = 0; df.bank ^= 1u; }
             y += mulq15(x * 2, dmix);
         } else if (dt == 1u) { /* L at one interval, R at two; feedback returns to L. */
@@ -662,18 +671,30 @@ static void fx_buses(const int32_t *cho_in, const int32_t *dly_in, const int32_t
             int32_t right = mulq15(dly_buf[(fx.dly_w - 2u * dl) & (DLY_LEN - 1u)], fb);
             fx.dly_lp += mulq15(right - fx.dly_lp, col);
             dly_buf[fx.dly_w++ & (DLY_LEN - 1u)] =
-                (int16_t)clamp((dly_in[i] >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
+                (int16_t)clamp((df.in_lp >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
             y += mulq15(left + right, dmix);
             df.side[i] = mulq15(left - right, dmix);
         } else {
             x = dly_buf[(fx.dly_w - dl) & (DLY_LEN - 1u)];
             fx.dly_lp += mulq15(x - fx.dly_lp, col);
             dly_buf[fx.dly_w++ & (DLY_LEN - 1u)] =
-                (int16_t)clamp((dly_in[i] >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
+                (int16_t)clamp((df.in_lp >> 1) + mulq15(fx.dly_lp, fb), -32767, 32767);
             y += mulq15(x * 2, dmix);
         }
-        wet[i] = y;
+        df.out_hold=y;df.side_hold=df.side[i];y=chorus;
+        }
+        if(++df.tick>=factor)df.tick=0;
+        df.out_lp+=(df.out_hold-df.out_lp)/(int32_t)factor;
+        df.side_lp+=(df.side_hold-df.side_lp)/(int32_t)factor;
+        df.side[i]=df.side_lp;
+        wet[i] = y+df.out_lp;
+        /* TONE shapes the reverb input; DAMP still controls the tail damping. */
+        int32_t tone=clamp(trk[0].p[P_DCOLOR],0,127);
+        int32_t coef=256+tone*tone*2;
+        df.rev_tone+=mulq15(rev_in[i]-df.rev_tone,coef);
+        df.tone_in[i]=df.rev_tone;
     }
+    rev_in=df.tone_in;
     rt = song.g[G_RTYPE];
     rt = clamp(rt, 0, 5);
     hl.side = 0;

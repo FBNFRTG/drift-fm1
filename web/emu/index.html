@@ -38,7 +38,7 @@ a { color: inherit; }
 .dim .slit { fill: #77777b; }
 .lit .slit { fill: #ececee; filter: drop-shadow(0 0 3px rgba(255, 255, 255, .6)); }
 /* #119: what can be pressed breathes, dark .. ~60 % of lit and back (hal/fm1_input.h fm1_led_breath, ~1.1 s; MENU >
- * LEDS DIM LO ~30 %): the peaks between dark and lit at ~0.8 / ~0.58 on screen (the LED's share, gamma-encoded) */
+ * LEDS DIM LO ~30 %): the peaks between dark and lit at ~0.9 / ~0.58 on screen (the LED's share, gamma-encoded) */
 @keyframes breath-btn { 0%, 100% { fill: #3a3934; } 50% { fill: #d8cfb6; } }
 @keyframes breath-slit { 0%, 100% { fill: #3a3a3c; } 50% { fill: #c8c8ca; } }
 @keyframes breath-btn-lo { 0%, 100% { fill: #3a3934; } 50% { fill: #aca592; } }
@@ -94,7 +94,7 @@ footer{border-top:1px solid #333;padding-top:20px;line-height:1.9}
 </head>
 <body>
 <main>
-<header class="masthead"><div><p class="eyebrow">GENERATIVE AMBIENT SYNTHESIZER</p><h1>DRIFT</h1></div><div><span class="badge">FM-1 / 0.8 EXPERIMENTAL</span><p>One voice of an instrument.<br>A pattern. Held in time.</p></div></header>
+<header class="masthead"><div><p class="eyebrow">GENERATIVE AMBIENT SYNTHESIZER</p><h1>DRIFT</h1></div><div><span class="badge">FM-1 / 0.9 EXPERIMENTAL</span><p>One voice of an instrument.<br>A pattern. Held in time.</p></div></header>
 <div class="device" id="device">
   <svg id="panel" viewBox="0 0 1000 624" aria-hidden="true"></svg>
   <canvas id="screen" width="240" height="240" role="img" aria-label="The screen"></canvas>
@@ -121,11 +121,11 @@ footer{border-top:1px solid #333;padding-top:20px;line-height:1.9}
   </select></span>
 </p>
 
-<section class="guide"><div><h2>01 / CHOOSE A SOUND</h2><p>Turn PATCHES on HOME. REC adds a heart; favorites also appear at the top. GLO opens oscillator 1; press again for oscillator 2 (WAVE starts at OFF). EDIT opens the filter. ENV sets ADSR. LFO: rate, filter depth, target, target depth. Targets: volume, delay send, oscillator 2 pitch or detune. Turn knobs by dragging vertically or using the wheel.</p></div><div><h2>02 / LET IT EVOLVE</h2><p>PLAY starts the generator. SCL sets root, scale and note range; press again for scale LEDs and Scale only. Default tempo is 80 BPM. ARP opens loop length in bars, note count, duration and probability. SEQ opens direction, interval, chaos and timing. The piano roll repeats exactly until a pattern setting changes. OCT keys glow brighter with each octave; OCT 0 leaves both off. SELECT sets BPM. ALGORITHM controls low-pass cutoff. Reverb is on FX. Pattern edits keep the playhead moving.</p></div><div><h2>03 / KEEP YOUR SOUND</h2><p>Stop playback, then SAVE. Knob 1 moves the cursor; knob 2 changes a character. SAVE or OCT+ stores the patch. A matching name asks before overwriting. Press HOME again on the patch list to delete the selected patch. KNOB 1 selects Yes/No; HOME confirms. Both questions start at No. HOME or OCT− cancels. Sounds and hearts stay in this browser. FX cycles through three pages: sends, space settings, and effect types. Page 3 selects Classic/Ping Pong/Reverse delay, Room/Spring/Hall/Space/Shimmer/Submarine reverb, tone and motion. Load SAMPLE 1–3 using the sample uploader below.</p></div></section>
+<section class="guide"><div><h2>01 / CHOOSE A SOUND</h2><p>Turn PATCHES on HOME. REC adds a heart; favorites also appear at the top. GLO opens oscillator 1; press again for oscillator 2 (WAVE starts at OFF). EDIT opens the filter. ENV sets ADSR. LFO: rate, filter depth, target, target depth. Targets: volume, delay send, oscillator 2 pitch or detune. Turn knobs by dragging vertically or using the wheel.</p></div><div><h2>02 / LET IT EVOLVE</h2><p>PLAY starts the generator. SCL sets root, scale and note range; press again for scale LEDs and Scale only. Default tempo is 80 BPM. ARP opens loop length in bars, note count, duration and probability. SEQ opens direction, interval, chaos and timing. The piano roll repeats exactly until a pattern setting changes. OCT keys glow brighter with each octave; OCT 0 leaves both off. SELECT sets BPM. ALGORITHM controls low-pass cutoff. Reverb is on FX. Pattern edits keep the playhead moving.</p></div><div><h2>03 / KEEP YOUR SOUND</h2><p>Stop playback, then SAVE. Knob 1 moves the cursor; knob 2 changes a character. SAVE or OCT+ stores the patch. A matching name asks before overwriting. Press HOME again on the patch list to delete the selected patch. KNOB 1 selects Yes/No; HOME confirms. Both questions start at No. HOME or OCT− cancels. Sounds and hearts stay in this browser. FX cycles through Delay (send %, time, feedback, type), Reverb (send %, size, type, tone) and Misc (chorus, damp, motion, level). Delay runs up to 4 bars; long times sound darker. DIR adds Bounce, Out, In, Pedal and Walk; INTERVAL includes alternating scale intervals and Triad. CHAOS 1–999 selects fixed permutations; 0 keeps order. Load SAMPLE 1–3 using the sample uploader below.</p></div></section>
 <footer>
   <small class="version">@VERSION@@PREVIEW@</small><br>
   DRIFT is a modified Felucca build. Felucca by Leo Kuroshita, Hügelton Instruments · <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a> · browser build after charlesvestal's <a href="https://github.com/charlesvestal/fm1-x0x">X0X</a> · DotGothic16 font, <a href="fonts/OFL.txt">SIL OFL 1.1</a><br>
-  <nav><a href="../">DRIFT home</a><a href="../downloads/drift-0.8-complete.zip" download>Firmware + source + webplayer</a><a href="samples/">Load samples</a><a href="install/">Install firmware</a><a href="../manual.html">Manual / build notes</a><a href="https://github.com/hugelton/Felucca">Felucca upstream</a></nav>
+  <nav><a href="../">DRIFT home</a><a href="../downloads/drift-0.9-complete.zip" download>Firmware + source + webplayer</a><a href="samples/">Load samples</a><a href="install/">Install firmware</a><a href="../manual.html">Manual / build notes</a><a href="https://github.com/hugelton/Felucca">Felucca upstream</a></nav>
   <small>M-VAVE and FM-1 are trademarks of their respective owners. Felucca is not affiliated with or endorsed by them.</small>
 </footer>
 </main>
@@ -216,7 +216,7 @@ function build(name) {
     const g = el("g", {});
     el("rect", { x, y, width: w, height: h, rx: 8, fill: "var(--part)", stroke: "var(--edge)", "stroke-width": 1.5, class: "face btn" }, g);
     const ink = n === "REC" ? "#ff453a" : undefined;
-    if (sub) { label(g, x + w / 2, y + h / 2 - 2, n, 10.8, SANS, ink); label(g, x + w / 2, y + h / 2 + 11, sub, 9.9); }
+    if (sub) { label(g, x + w / 2, y + h / 2 - 2, n, 10.9, SANS, ink); label(g, x + w / 2, y + h / 2 + 11, sub, 9.9); }
     else label(g, x + w / 2, y + h / 2 + 4.5, n, 12.6, SANS, ink);
     buttons.push({ g, bit: B[n], name: sub ? `${n} / ${sub}` : n });
   };
@@ -230,15 +230,15 @@ function build(name) {
   const [x0, y0, w, h] = L.keybed;
   el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: "var(--tray)" });
   // the keys: two rows of the same black keys, each with a slit down its middle that lights
-  const pitch = (w - 24) / 16, kw = pitch * 0.88, kh = h * 0.425, sw = Math.max(3, kw * 0.14);
+  const pitch = (w - 24) / 16, kw = pitch * 0.98, kh = h * 0.425, sw = Math.max(3, kw * 0.14);
   const key = (cx, cy, k) => {
     const g = el("g", {}), y = cy - kh / 2;
     el("rect", { x: cx - kw / 2, y, width: kw, height: kh, rx: kw / 2, class: "face key" }, g);
-    el("rect", { x: cx - sw / 2, y: y + kw * 0.4, width: sw, height: kh - kw * 0.8, rx: sw / 2, class: "slit" }, g);
+    el("rect", { x: cx - sw / 2, y: y + kw * 0.4, width: sw, height: kh - kw * 0.9, rx: sw / 2, class: "slit" }, g);
     el("rect", { x: cx - pitch / 2, y: cy - h * 0.24, width: pitch, height: h * 0.48, fill: "transparent" }, g);   // its target
     keys[k] = { g, name: keyName(k) };
   };
-  WHITE.forEach((k, i) => key(x0 + 12 + (i + 0.5) * pitch, y0 + h * 0.85, k));
+  WHITE.forEach((k, i) => key(x0 + 12 + (i + 0.5) * pitch, y0 + h * 0.95, k));
   BLACK_AFTER.forEach((a, j) => key(x0 + 12 + (a + 1) * pitch, y0 + h * 0.25, BLACK[j]));
   // HTML targets over the drawing (pointer-events: none): touch-action and pointer capture work on them everywhere
   const hit = (c, cls, role) => {

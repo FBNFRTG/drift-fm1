@@ -116,10 +116,19 @@ static int up_valid(const up_rec_t *r)
 static int up_used(uint32_t k) { return k < UP_SLOTS && up_valid(up_rec(k)); }
 
 static int up_grid(const up_rec_t *r) { return r->ver == 3u || r->ver == UP_VER_GRID; }
-static int16_t up_value(const up_rec_t *r, uint32_t k) { return r->ver >= 4u ? (int16_t)r->packed[k] - 64 : r->p[k]; }
+/* DRIFT 0.9: use spare bytes, not a larger record, for CHAOS 0..999.
+ * Old records have no marker. Old firmware reads the low seven bits safely. */
+_Static_assert(P_COUNT < 139, "DRIFT extension must remain outside parameter bytes");
+static int16_t up_value(const up_rec_t *r, uint32_t k) {
+ int16_t v=r->ver>=4u?(int16_t)r->packed[k]-64:r->p[k];
+ if(r->ver>=4u && r->np==P_COUNT && r->engine==0 && k==P_DRHYTHM && r->packed[139]==0xD9 && r->packed[140]<8)v+=(int16_t)(128u*r->packed[140]);
+ return v;
+}
 static void up_set_value(up_rec_t *r, uint32_t k, int16_t v)
 {
-    if (r->ver >= 4u) r->packed[k] = (uint8_t)(v + 64); else r->p[k] = v;
+    if(r->ver>=4u && r->np==P_COUNT && r->engine==0 && k==P_DRHYTHM){
+        v=(int16_t)clamp(v,0,999);r->packed[139]=0xD9;r->packed[140]=(uint8_t)(v/128);r->packed[k]=(uint8_t)(v%128+64);
+    }else if (r->ver >= 4u) r->packed[k] = (uint8_t)(v + 64); else r->p[k] = v;
 }
 /* Legacy PHYS drums map through decoded parameters, not their disk representation. */
 static void up_migrate(up_rec_t *r)
@@ -243,7 +252,7 @@ static int up_parse(const uint8_t *a, uint32_t na, up_rec_t *r, uint32_t *slot)
     for (i = 0; i < P_COUNT; i++, k += 2u)
         {
             int32_t value = (int32_t)((a[k] & 127u) | (a[k + 1] & 127u) << 7) - 8192;
-            if (value < -64 || value > 127) return 1;
+            if (value < -64 || value > ((i==P_DRHYTHM && r->engine==0)?999:127)) return 1;
             up_set_value(r, i, (int16_t)value);
         }
     if (na >= k + 33u + 16u && a[k + 32u] == 1u) {    /* a drum grid */

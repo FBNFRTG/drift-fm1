@@ -49,8 +49,7 @@ const deleted=await device(p.flash());assert.equal(deleted.e.web_test_user_prese
 // Both controls on FX page 3 are exercised through the same UI as the hardware.
 let worst=0;
 for(let dt=0;dt<3;dt++)for(let rt=0;rt<6;rt++){
- const f=await device();f.tap(0);f.turn(4,127);f.turn(5,127);f.tap(0);f.turn(3,127);f.turn(6,127);f.tap(0);
- f.turn(3,dt);f.turn(4,-127);f.turn(4,rt);f.turn(6,127);f.e.web_keys(0x5555);
+ const f=await device();f.tap(0);f.turn(3,127);f.turn(5,127);f.turn(6,dt);f.tap(0);f.turn(3,127);f.turn(4,127);f.turn(5,-127);f.turn(5,rt);f.turn(6,127);f.tap(0);f.turn(5,127);f.e.web_keys(0x5555);
  const start=performance.now();f.render(3000);worst=Math.max(worst,(performance.now()-start)/1000);
  assert(f.stats().peak>0.001&&f.stats().peak<=1);f.e.web_keys(0);
 }

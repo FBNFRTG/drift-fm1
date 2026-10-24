@@ -17,6 +17,33 @@ static void drift_release(void){uint32_t i;for(i=0;i<128;i++)if(drift_gen.off[i]
 static void drift_restart(void){drift_release();drift_gen.pos=0;drift_gen.was_playing=0;}
 static uint8_t drift_nearest(int note){uint32_t i,b=0;int best=999;for(i=0;i<drift_gen.pool_n;i++){int d=drift_gen.pool[i]-note;if(d<0)d=-d;if(d<best){best=d;b=i;}}return drift_gen.pool[b];}
 static uint32_t drift_loop_samples(void){return beat_samples()*4u*(uint32_t)clamp(trk[0].p[P_DLEN],1,16);}
+/* Scale-degree movement: append-only values keep old patch directions intact. */
+static int drift_degree(uint32_t direction,uint32_t i){
+ if(!direction)return 0;
+ uint32_t depth=(direction-1)%7+1,mode=(direction-1)/7,step=i%(depth+1),q;
+ switch(mode){
+ case 0:return (int)step;
+ case 1:return -(int)step;
+ case 2:q=i%(2*depth+1);return q<=depth?(int)q:(int)depth-(int)q;
+ case 3:q=i%(2*depth+1);return q<=depth?-(int)q:(int)q-(int)depth;
+ case 4:q=i%(2*depth);return q<=depth?(int)q:(int)(2*depth-q);
+ case 5:return step&1?-(int)((step+1)/2):(int)(step/2);
+ case 6:return step&1?(int)((depth+1)/2-step/2):-(int)(depth/2-step/2);
+ case 7:return (i&1)?(int)((i/2)%depth+1):0;
+ default: { /* Seeded walk is regenerated once, never on each cycle. */
+  int d=0;uint32_t h=0x71239ABDu;
+  for(uint32_t k=0;k<i;k++){h^=h<<13;h^=h>>17;h^=h<<5;d+=(h&1)?1:-1;d=clamp(d,-(int)depth,(int)depth);}return d;
+ }
+ }
+}
+static int drift_interval_degree(int degree,uint32_t interval){
+ static const uint8_t patterns[8][4]={{2,3,2,3},{2,4,2,4},{3,4,3,4},{1,2,1,2},{2,2,3,0},{4,3,4,3},{7,2,7,2},{2,3,4,0}};
+ if(interval<8)return degree*(interval?interval:1);
+ static const uint8_t lengths[8]={2,2,2,2,3,2,2,3};
+ int sign=degree<0?-1:1,n=degree<0?-degree:degree,sum=0;
+ for(int k=0;k<n;k++)sum+=patterns[clamp(interval-8,0,7)][k%lengths[clamp(interval-8,0,7)]];
+ return sign*sum;
+}
 static void drift_generate(void){
  int16_t *p=trk[0].p;uint32_t i,steps=16u*(uint32_t)clamp(p[P_DLEN],1,16);
  drift_gen.rng=0xA53C916Du;drift_gen.pool_n=0;
@@ -26,13 +53,13 @@ static void drift_generate(void){
  for(i=0;i<drift_gen.count;i++){
   uint32_t slot=i*steps/drift_gen.count;
   uint32_t begin=slot*65536u/steps,end=((i+1u)*steps/drift_gen.count)*65536u/steps;
-  uint32_t direction=(uint32_t)clamp(p[P_DPITCH],0,21),interval=(uint32_t)clamp(p[P_DOCT],0,7);
-  uint32_t depth=direction?((direction-1)%7)+1:0,mode=direction?(direction-1)/7:0;
+  uint32_t direction=(uint32_t)clamp(p[P_DPITCH],0,63),interval=(uint32_t)clamp(p[P_DOCT],0,15);
   int root=-1,degree=0;
   for(uint32_t j=0;j<drift_gen.pool_n;j++)if(drift_gen.pool[j]%12==p[P_ROOT] && (root<0 || ((int)drift_gen.pool[j]>60?(int)drift_gen.pool[j]-60:60-(int)drift_gen.pool[j])<((int)drift_gen.pool[root]>60?(int)drift_gen.pool[root]-60:60-(int)drift_gen.pool[root])))root=(int)j;
-  if(depth){uint32_t period=depth+1,step=i%period;degree=mode==0?(int)step:mode==1?-(int)step:(i%(2*depth+1)<=depth?(int)(i%(2*depth+1)):(int)depth-(int)(i%(2*depth+1)));}
-  else if(interval)degree=(int)(i%4);
-  degree*=interval?interval:1;
+  degree=drift_degree(direction,i);
+  if(!direction && interval)degree=i%4;
+  degree=drift_interval_degree(degree,interval);
+  if(root>=0 && (direction>21 || interval>=8)){int n=drift_gen.pool_n;degree=((root+degree)%n+n)%n-root;}
   drift_gen.note[i]=root>=0?drift_gen.pool[clamp(root+degree,0,drift_gen.pool_n-1)]:0;
   drift_gen.enabled[i]=(uint8_t)(root>=0 && drift_rand()%100u<(uint32_t)p[P_DPROB]);
   drift_gen.velocity[i]=96;drift_gen.phase[i]=(uint16_t)begin;
@@ -47,8 +74,11 @@ static void drift_generate(void){
    drift_gen.phase[i]=(uint16_t)clamp(pos,0,65535);
   }
  }
- /* Chaos performs a seeded Fisher–Yates shuffle; it cannot merely transpose. */
- for(i=drift_gen.count;i>1;i--)if(drift_rand()%100u<(uint32_t)p[P_DRHYTHM]){uint32_t j=drift_rand()%i;uint8_t n=drift_gen.note[i-1];drift_gen.note[i-1]=drift_gen.note[j];drift_gen.note[j]=n;}
+ /* Values 1..999 choose independently seeded full permutations. No transport RNG. */
+ if(p[P_DRHYTHM]>0){
+  drift_gen.rng=0x9E3779B9u*(uint32_t)p[P_DRHYTHM]^0xA53C916Du;
+  for(i=drift_gen.count;i>1;i--){uint32_t j=drift_rand()%i;uint8_t n=drift_gen.note[i-1];drift_gen.note[i-1]=drift_gen.note[j];drift_gen.note[j]=n;}
+ }
  /* Sort timed events while preserving their assigned pitch/probability. */
  for(i=1;i<drift_gen.count;i++)for(uint32_t j=i;j && drift_gen.phase[j]<drift_gen.phase[j-1];j--){
   uint16_t ph=drift_gen.phase[j];drift_gen.phase[j]=drift_gen.phase[j-1];drift_gen.phase[j-1]=ph;

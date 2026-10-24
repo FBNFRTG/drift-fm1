@@ -1,3 +1,18 @@
+# DRIFT changelog
+
+## 0.9 — Sequence variations and reorganised effects
+
+- DIR: ROOT plus nine movement families with seven ranges each (UP, DN, UD, DU, BOUNCE, OUT, IN, PEDAL, WALK). Old direction values retain their meaning.
+- INTERVAL: fixed scale intervals plus 3rd/4th, 3rd/5th, 4th/5th, 2nd/3rd, TRIAD (stacked thirds with octave return), 5th/4th, octave/3rd and 3rd/4th/5th. These are melodic steps in the selected scale, not simultaneous chords. New sequences wrap within the selected note range.
+- CHAOS: 0 keeps the ordered pattern; 1–999 select independently seeded permutations. The number selects a variation, not an intensity. Identical pitches cannot become different through shuffling alone.
+- FX 1 DELAY: Delay %, Time, Feedback, Type.
+- FX 2 REVERB: Reverb %, Size, Type, Tone.
+- FX 3 MISC: Chorus, Damp, Motion, Level.
+- Delay Time is ordered from short to long, with straight, dotted and triplet values up to 4 bars. Durations are now realised rather than clipped to the buffer. Long delays reduce the delay-line sample rate and therefore sound darker. At 40 BPM, 4 bars = 24 seconds per delay interval / reverse segment.
+- Tone now shapes the reverb input; Damp controls the reverb tail. The former stored delay Tone value becomes Reverb Tone. Delay feedback colour is fixed at its former default.
+- Patch and sample addresses and 192-byte patch record size are unchanged. CHAOS values above 127 use previously unused record bytes. Old patches load, but nonzero Chaos patterns and FX colour can sound different. Downgrading cannot reproduce the new options.
+- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.
+
 # 0.8 — 2026-10-23
 
 Dedicated DRIFT identity FM-1_983 in the package, running firmware and update loader. Release builds retain this identity. Self-hosted project website, complete source downloads, English manual, release manifest and checksums. Synthesis, patch layout and sample storage unchanged from 0.7.
