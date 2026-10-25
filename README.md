@@ -1,5 +1,7 @@
 # DRIFT
 
+Version 0.9.1 fixes the Delay Time bar ordering and restores narrower webplayer keys with both rows contained inside the keybed. Audio and patch storage are unchanged from 0.9.
+
 **An ambient instrument for M-VAVE FM-1.** Classic synth sounds, warm basses, pads and plucks, with a repeating generative Euclidean sequencer. Minimal monochrome interface, one sequencer track and eight voices.
 
 By **Fabian Freitag**. Based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita / Hügelton Instruments.
@@ -36,12 +38,12 @@ See the [English manual](https://www.fbnfrtg.de/tools/fm1/drift/manual.html) or 
 
 ## Install and release status
 
-Release **0.9**, identity **FM-1_983**, update loader **ota-FM-1_983**. This identity stays fixed across versions.
+Release **0.9.1**, identity **FM-1_983**, update loader **ota-FM-1_983**. This identity stays fixed across versions.
 Use the `.fwsc` attached to a GitHub release, or the website installer in desktop Chrome or Edge over HTTPS. Keep power and USB connected during installation.
 
-Software build, native synthesis/persistence, WebAssembly and simulated update/loader checks passed for the supplied 0.9 binary. Physical installation, outgoing updates and recovery for this exact release still require verification on a real FM-1 before Firmware Hub submission. Earlier user-tested builds do not replace testing this package.
+Software build, native synthesis/persistence, WebAssembly and simulated update/loader checks passed for the supplied 0.9.1 binary. Physical installation, outgoing updates and recovery for this exact release still require verification on a real FM-1 before Firmware Hub submission. Earlier user-tested builds do not replace testing this package.
 
-The 0.9 update retains the DRIFT 0.8 patch/sample storage layout. New CHAOS values use spare bytes; older firmware cannot reproduce all new settings. Nonzero CHAOS patterns and FX colour can change after this update. Other firmwares' projects and samples are not guaranteed compatible. Back up your data before updating or switching firmware.
+The 0.9.1 update retains the DRIFT 0.8 patch/sample storage layout. New CHAOS values use spare bytes; older firmware cannot reproduce all new settings. Nonzero CHAOS patterns and FX colour can change after this update. Other firmwares' projects and samples are not guaranteed compatible. Back up your data before updating or switching firmware.
 
 ## Samples
 
@@ -59,7 +61,7 @@ DRIFT is distributed under **GPL-3.0-only**, with the third-party licences and n
 
 Independent firmware; not affiliated with M-VAVE. [Impressum / Legal notice](https://www.fbnfrtg.de/impressum/).
 
-## 0.9 — Sequence variations and reorganised effects
+## 0.9.1 — Sequence variations and reorganised effects
 
 - DIR: ROOT plus nine movement families with seven ranges each (UP, DN, UD, DU, BOUNCE, OUT, IN, PEDAL, WALK). Old direction values retain their meaning.
 - INTERVAL: fixed scale intervals plus 3rd/4th, 3rd/5th, 4th/5th, 2nd/3rd, TRIAD (stacked thirds with octave return), 5th/4th, octave/3rd and 3rd/4th/5th. These are melodic steps in the selected scale, not simultaneous chords. New sequences wrap within the selected note range.
@@ -70,5 +72,5 @@ Independent firmware; not affiliated with M-VAVE. [Impressum / Legal notice](htt
 - Delay Time is ordered from short to long, with straight, dotted and triplet values up to 4 bars. Durations are now realised rather than clipped to the buffer. Long delays reduce the delay-line sample rate and therefore sound darker. At 40 BPM, 4 bars = 24 seconds per delay interval / reverse segment.
 - Tone now shapes the reverb input; Damp controls the reverb tail. The former stored delay Tone value becomes Reverb Tone. Delay feedback colour is fixed at its former default.
 - Patch and sample addresses and 192-byte patch record size are unchanged. CHAOS values above 127 use previously unused record bytes. Old patches load, but nonzero Chaos patterns and FX colour can sound different. Downgrading cannot reproduce the new options.
-- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.
+- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.1.
 

@@ -45,10 +45,10 @@ EMU_PREVIEW=0 sh web/emu/build.sh
 python3 tools/package_drift.py
 ```
 
-Requires Emscripten. The website is written to `build/drift-0.9-website/upload/`. Serve that directory over HTTPS or localhost. AudioWorklet and Web MIDI do not work over ordinary HTTP on a remote hostname or file://.
+Requires Emscripten. The website is written to `build/drift-0.9.1-website/upload/`. Serve that directory over HTTPS or localhost. AudioWorklet and Web MIDI do not work over ordinary HTTP on a remote hostname or file://.
 
 ```sh
-python3 -m http.server 8000 --directory build/drift-0.9-website/upload
+python3 -m http.server 8000 --directory build/drift-0.9.1-website/upload
 ```
 
 Open http://localhost:8000/webplayer/ . Browser patches are local to that browser. USB hardware is not emulated.

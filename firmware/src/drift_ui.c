@@ -3,6 +3,12 @@
  */
 static int up_store_cat(uint32_t k, const char *name, uint32_t cat);
 static int drift_up_delete(uint32_t k);
+/* Storage IDs stay stable; the control and its bar use ascending duration. */
+static const uint8_t D_TIME_ORDER[]={3,5,2,4,11,1,15,10,0,16,12,6,17,13,7,14,8,9};
+static uint32_t drift_time_index(int value){
+ for(uint32_t i=0;i<sizeof D_TIME_ORDER;i++)if(D_TIME_ORDER[i]==value)return i;
+ return 0;
+}
 enum { D_HOME, D_OSC, D_FILTER, D_ENV, D_LFO, D_FX, D_SPACE, D_SCL, D_SEQ1, D_SEQ2, D_OSC2, D_SCL2, D_TYPES };
 static uint8_t drift_page, drift_dirty, drift_ready;
 static int drift_row;
@@ -190,7 +196,7 @@ static void drift_input(void) {
   uint32_t id=D_PARAMS[drift_page][k];if(id==255)continue;
   int16_t *v=&trk[0].p[id];
   const param_desc_t *d=drift_desc(id);
-  if(id==P_DR2){static const uint8_t order[]={3,5,2,4,11,1,15,10,0,16,12,6,17,13,7,14,8,9};int at=0;for(int j=0;j<18;j++)if(order[j]==*v)at=j;*v=order[clamp(at+s,0,17)];}
+  if(id==P_DR2)*v=D_TIME_ORDER[clamp((int)drift_time_index(*v)+s,0,(int)sizeof D_TIME_ORDER-1)];
   else *v=(int16_t)clamp(*v+s,d->min,d->max);
   if(id>=P_DR0 && id<=P_DR5)song.g[D_GLOBALS[id-P_DR0]]=*v;
   if(id==P_DDEST)trk[0].p[P_LD_PIT]=0; /* legacy vibrato ends when a new target is chosen */
@@ -310,6 +316,7 @@ static void drift_columns(void){
   draw_text_line(x,69,width,&AF_S,v,65535,0,1);
   if(drift_page==D_FX || drift_page==D_SPACE || drift_page==D_TYPES || drift_page==D_FILTER){
    uint32_t h=d->max>d->min?(uint32_t)(val-d->min)*(drift_page==D_FILTER?42u:94u)/(d->max-d->min):0;
+   if(id==P_DR2)h=drift_time_index(val)*94u/(sizeof D_TIME_ORDER-1u);
    drift_line(x+9,196,x+45,196,65535);if(h)lcd_fill(x+18,196-h,18,h,65535);
   }
  }

@@ -27,7 +27,7 @@ $('connect').onclick=async()=>{try{
  if(input)input.onmidimessage=null;input=access.inputs.get($('input').value);output=access.outputs.get($('output').value);if(!input||!output)throw new Error('Select input and output.');
  await input.open();await output.open();input.onmidimessage=onMessage;busy=true;update();
  const info=await request(1,[]),end=info.indexOf(0),name=String.fromCharCode(...info.slice(0,end));
- if(end<0||!/^FELUCCA DRIFT 0\.(?:[345789]|6(?:\.1)?)$/.test(name))throw new Error('Expected DRIFT 0.3–0.9. Found: '+name+'. No samples written.');
+ if(end<0||!/^FELUCCA DRIFT 0\.(?:[34578]|9(?:\.1)?|6(?:\.1)?)$/.test(name))throw new Error('Expected DRIFT 0.3–0.9.1. Found: '+name+'. No samples written.');
  slots=parseInfo(await request(15,[]));verified=true;say('Connected: '+name+' · 3 slots available.');
  }catch(e){verified=false;fail(e);}finally{busy=false;update();}};
 $('target').onchange=()=>{verified=false;if($('target').value==='local'){try{localInfo();say('Browser-Speicher. Nach dem Save den Webplayer neu laden.');}catch(e){fail(e);}}else{slots=Array.from({length:3},()=>({zones:0,name:''}));say('Connect USB, enable MIDI and check device.');}update();};

@@ -1,4 +1,6 @@
-# DRIFT 0.9 — Bedienung und Update
+# DRIFT 0.9.1 — Bedienung und Update
+
+Version 0.9.1 korrigiert den Delay-Time-Balken und die Tastengröße im Webplayer. Beide Tastenreihen liegen vollständig im vorgesehenen Bereich. Klang und Patch-Speicherung bleiben gegenüber 0.9 unverändert.
 
 Eine Spur, acht Stimmen, zwei Oszillatoren und drei Sample-Slots. Firmware und Webplayer verwenden denselben C-Code für Audio und Display.
 
@@ -46,4 +48,4 @@ Drei Sample-Slots: je bis ca. 7,38 Sekunden, mono, 22.050 Hz, intern IMA ADPCM. 
 - Quellcode: https://github.com/FBNFRTG/drift-fm1
 - Impressum: https://www.fbnfrtg.de/impressum/
 
-Build: BUILDING.md. Softwaretests sind enthalten; die neue Firmware 0.9 wurde hier nicht auf einem echten FM-1 getestet. Identity bleibt FM-1_983. Lizenz und Credits: LICENSE, LICENSING.md, CREDITS.md.
+Build: BUILDING.md. Softwaretests sind enthalten; die neue Firmware 0.9.1 wurde hier nicht auf einem echten FM-1 getestet. Identity bleibt FM-1_983. Lizenz und Credits: LICENSE, LICENSING.md, CREDITS.md.

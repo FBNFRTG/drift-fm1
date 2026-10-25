@@ -9,7 +9,7 @@ button.onclick=async()=>{
  try{
   if(!navigator.requestMIDIAccess)throw new Error('Web MIDI is unavailable. Use Chrome or Edge over HTTPS or localhost.');
   status.textContent='Checking firmware…';
-  const [fr,mr]=await Promise.all([fetch('drift-fm1-0.9.fwsc',{cache:'no-store'}),fetch('manifest.json',{cache:'no-store'})]);
+  const [fr,mr]=await Promise.all([fetch('drift-fm1-0.9.1.fwsc',{cache:'no-store'}),fetch('manifest.json',{cache:'no-store'})]);
   if(!fr.ok||!mr.ok)throw new Error('Firmware download failed. Nothing written.');
   const bytes=new Uint8Array(await fr.arrayBuffer()),manifest=await mr.json();
   if(bytes.length!==manifest.bytes||await sha256hex(bytes)!==manifest.sha256||productOf(bytes)!==manifest.product||!/^FM-1_\d+$/.test(manifest.product))throw new Error('Firmware validation failed. Nothing written.');

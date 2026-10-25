@@ -22,7 +22,7 @@ thanks the work below; each keeps its own licence (see [LICENSE](LICENSE), [LICE
 - Contributions: [keremimo](https://github.com/keremimo) (white-key scales, #2), [ChanceTheMaker](https://github.com/ChanceTheMaker)
   (TRS MIDI, bend, sustain and clock, palettes, favourites, editor display settings: #8, #10, #11, #12),
   [andreahaku](https://github.com/andreahaku) (sample recording and trim, #29; SLICE manual slices and tests, #27, #22),
-  [spinkham](https://github.com/spinkham) (the boot fix for 0.9 projects, #111; the emulator's MIDI knobs, #182),
+  [spinkham](https://github.com/spinkham) (the boot fix for 0.9.1 projects, #111; the emulator's MIDI knobs, #182),
   [ugai](https://github.com/ugai) (the Try page's horizontal knob drag, #240),
   [zednaked](https://github.com/zednaked) (ratchets, #100),
   [jasonpersinger](https://github.com/jasonpersinger) (the ROOM reverb click fix, #121),

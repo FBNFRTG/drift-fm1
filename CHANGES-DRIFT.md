@@ -1,5 +1,10 @@
 # DRIFT changelog
 
+## 0.9.1 — Display corrections
+
+- Delay Time bar follows ascending duration rather than stored enum IDs. Audio and saved values are unchanged.
+- Webplayer keys restore their narrower width; both rows fit within the keybed on desktop and mobile.
+
 ## 0.9 — Sequence variations and reorganised effects
 
 - DIR: ROOT plus nine movement families with seven ranges each (UP, DN, UD, DU, BOUNCE, OUT, IN, PEDAL, WALK). Old direction values retain their meaning.
@@ -11,7 +16,7 @@
 - Delay Time is ordered from short to long, with straight, dotted and triplet values up to 4 bars. Durations are now realised rather than clipped to the buffer. Long delays reduce the delay-line sample rate and therefore sound darker. At 40 BPM, 4 bars = 24 seconds per delay interval / reverse segment.
 - Tone now shapes the reverb input; Damp controls the reverb tail. The former stored delay Tone value becomes Reverb Tone. Delay feedback colour is fixed at its former default.
 - Patch and sample addresses and 192-byte patch record size are unchanged. CHAOS values above 127 use previously unused record bytes. Old patches load, but nonzero Chaos patterns and FX colour can sound different. Downgrading cannot reproduce the new options.
-- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.
+- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.1.
 
 # 0.8 — 2026-10-23
 

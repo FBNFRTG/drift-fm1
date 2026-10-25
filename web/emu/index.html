@@ -230,7 +230,7 @@ function build(name) {
   const [x0, y0, w, h] = L.keybed;
   el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: "var(--tray)" });
   // the keys: two rows of the same black keys, each with a slit down its middle that lights
-  const pitch = (w - 24) / 16, kw = pitch * 0.98, kh = h * 0.425, sw = Math.max(3, kw * 0.14);
+  const pitch = (w - 24) / 16, kw = pitch * 0.88, kh = h * 0.425, sw = Math.max(3, kw * 0.14);
   const key = (cx, cy, k) => {
     const g = el("g", {}), y = cy - kh / 2;
     el("rect", { x: cx - kw / 2, y, width: kw, height: kh, rx: kw / 2, class: "face key" }, g);
@@ -238,7 +238,7 @@ function build(name) {
     el("rect", { x: cx - pitch / 2, y: cy - h * 0.24, width: pitch, height: h * 0.48, fill: "transparent" }, g);   // its target
     keys[k] = { g, name: keyName(k) };
   };
-  WHITE.forEach((k, i) => key(x0 + 12 + (i + 0.5) * pitch, y0 + h * 0.95, k));
+  WHITE.forEach((k, i) => key(x0 + 12 + (i + 0.5) * pitch, y0 + h * 0.75, k));
   BLACK_AFTER.forEach((a, j) => key(x0 + 12 + (a + 1) * pitch, y0 + h * 0.25, BLACK[j]));
   // HTML targets over the drawing (pointer-events: none): touch-action and pointer capture work on them everywhere
   const hit = (c, cls, role) => {
