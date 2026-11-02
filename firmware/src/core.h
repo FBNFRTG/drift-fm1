@@ -91,6 +91,11 @@ enum {                          /* per-track parameters */
 #define P_DDELAY P_FM4_ATK
 #define P_DCOLOR P_FM4_DEC
 #define P_DMOD P_FM4_SUS
+/* Unused FM operator 3 envelopes, stored with the TAPE extension marker. */
+#define P_DTAPE P_FM3_ATK
+#define P_DWOW P_FM3_DEC
+#define P_DFLUT P_FM3_SUS
+#define P_DWARM P_FM3_REL
 
 enum {                          /* global parameters */
     G_BPM, G_SWING, G_CLOCK, G_TUNE,

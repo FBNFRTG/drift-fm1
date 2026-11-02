@@ -1137,6 +1137,8 @@ static uint32_t mix_split(void)
 }
 #endif
 
+#include "drift_tape.c"
+
 static void mix_block(int32_t *out, uint32_t n)
 {
     uint32_t i;
@@ -1185,8 +1187,11 @@ static void mix_block(int32_t *out, uint32_t n)
         return;
     }
     for (i = 0; i < n; i++) {
-        int32_t l = (((mix_l[i] + wet[i]) >> 2) * mg) >> 10;
-        int32_t r = (((mix_r[i] + wet[i]) >> 2) * mg) >> 10;
+        int32_t l = (mix_l[i] + wet[i]) >> 2;
+        int32_t r = (mix_r[i] + wet[i]) >> 2;
+        drift_tape_sample(&l,&r); /* after delay/reverb, before master volume/limiter */
+        l = (l * mg) >> 10;
+        r = (r * mg) >> 10;
         master_out(&l, &r);
         out[2u * i] = l;
         out[2u * i + 1u] = r;

@@ -1,6 +1,6 @@
-# DRIFT 0.9.1 — Bedienung und Update
+# DRIFT 0.9.6 — Bedienung und Update
 
-Version 0.9.1 korrigiert den Delay-Time-Balken und die Tastengröße im Webplayer. Beide Tastenreihen liegen vollständig im vorgesehenen Bereich. Klang und Patch-Speicherung bleiben gegenüber 0.9 unverändert.
+Version 0.9.6 ersetzt SEQ TIME vollständig durch musikalische Rhythmusvariationen. Bei 0 bleibt die gleichmäßige euklidische Verteilung erhalten. Höhere Werte ergänzen zunehmend kurze/lange Notenpaare, punktierte Noten, feinere Unterteilungen und Pausen. Tonhöhen und Wahrscheinlichkeit bleiben gleich; der Abspielkopf läuft weiter. Die Piano-Roll zeigt die tatsächlichen Notenlängen.
 
 Eine Spur, acht Stimmen, zwei Oszillatoren und drei Sample-Slots. Firmware und Webplayer verwenden denselben C-Code für Audio und Display.
 
@@ -12,7 +12,7 @@ SEQ:
 - DIR: ROOT, UP 1–7, DN 1–7, UD 1–7, DU 1–7, BOUNCE 1–7, OUT 1–7, IN 1–7, PEDAL 1–7, WALK 1–7. UD/DU wechseln über und unter den Grundton; BOUNCE läuft vorwärts und rückwärts ohne doppelten Endpunkt. OUT/IN bewegen sich nach außen/innen. PEDAL wechselt zwischen Grundton und Lauftönen. WALK ist ein reproduzierbarer Zufallslauf.
 - INTERVAL: 1ST, 2ND, 3RD, 4TH, 5TH, 6TH, 7TH, 8VE; danach 3/4, 3/5, 4/5, 2/3, TRIAD, 5/4, 8/3, 3/4/5. Die Brüche sind hier wechselnde Intervalle, keine Taktangaben. TRIAD addiert 2, 2, 3 Skalenstufen. Alle Intervalle folgen der eingestellten Skala. 1ST und 2ND behalten aus Kompatibilitätsgründen denselben Grundschritt; bei DIR ROOT und INTERVAL 1ST bleiben es Grundtöne. Neue Folgen werden an Bereichsgrenzen innerhalb des Bereichs weitergeführt.
 - CHAOS: 0 = geordnet. 1–999 = verschiedene feste Durchmischungen. Kein Intensitätsregler mehr. Bei wenigen oder gleichen Noten können mehrere Werte hörbar identisch sein.
-- TIME: 0–100, Swing bis zu starken Verschiebungen und Clustern.
+- TIME: 0 = gleichmäßige Verteilung; 1–33 = zunehmend kurze/lange und punktierte Figuren; 34–66 = feinere Unterteilungen und Pausen; 67–100 = starke Kontraste zwischen dichten Gruppen und längeren Lücken. Dauer aus ARP bleibt der Ausgangswert. Abstände liegen auf einem 1/32-Raster; nicht jeder Reglerwert ergibt bei jeder Notenanzahl ein anderes Pattern.
 
 Alle vier Werte auf 0 spielen nur den Grundton. Ohne Grundton im gewählten Bereich bleibt die Sequenz stumm.
 
@@ -20,9 +20,10 @@ Alle vier Werte auf 0 spielen nur den Grundton. Ohne Grundton im gewählten Bere
 
 | Seite | Knob 1 | Knob 2 | Knob 3 | Knob 4 |
 | --- | --- | --- | --- | --- |
-| DELAY 1/3 | Delay % | Time | Feedback | Type |
-| REVERB 2/3 | Reverb % | Size | Type | Tone |
-| MISC 3/3 | Chorus | Damp | Motion | Level |
+| DELAY 1/4 | Delay % | Time | Feedback | Type |
+| REVERB 2/4 | Reverb % | Size | Type | Tone |
+| TAPE 3/4 | Tape | Wow | Flutter | Warmth |
+| MISC 4/4 | Chorus | Damp | Motion | Level |
 
 Delay: Classic, Ping Pong, Reverse. Time geht in zeitlicher Reihenfolge von 1/32 bis 4 Takten, inklusive punktierter und triolischer Werte. D = punktiert, T = Triole. Bei langen Zeiten arbeitet nur der Delay-Puffer mit geringerer Abtastrate: echte längere Wiederholungen, mit dunklerem Klang. Maximal 24 Sekunden bei 40 BPM. Reverse sammelt einen Abschnitt und spielt ihn rückwärts; der Anfang einer kurzen Aufnahme kann daher erst gegen Ende des nächsten Abschnitts hörbar werden. Ping Pong benötigt Feedback für den zweiten und weitere Echos.
 
@@ -48,4 +49,4 @@ Drei Sample-Slots: je bis ca. 7,38 Sekunden, mono, 22.050 Hz, intern IMA ADPCM. 
 - Quellcode: https://github.com/FBNFRTG/drift-fm1
 - Impressum: https://www.fbnfrtg.de/impressum/
 
-Build: BUILDING.md. Softwaretests sind enthalten; die neue Firmware 0.9.1 wurde hier nicht auf einem echten FM-1 getestet. Identity bleibt FM-1_983. Lizenz und Credits: LICENSE, LICENSING.md, CREDITS.md.
+Build: BUILDING.md. Softwaretests sind enthalten; die neue Firmware 0.9.6 wurde hier nicht auf einem echten FM-1 getestet. Identity bleibt FM-1_983. Lizenz und Credits: LICENSE, LICENSING.md, CREDITS.md.

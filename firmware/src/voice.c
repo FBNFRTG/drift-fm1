@@ -111,6 +111,7 @@ static void track_lfo_tick(track_t *t)                  /* (one core: the whole 
 /* voices the engine may use (POLY and UNISON): its cap, else all of them */
 static uint32_t trk_nvoice(const track_t *t)
 {
+    if(t->engine==0 && t->p[P_E0]>=10)return PHYS_POLY;
     uint32_t c = ENGINES[t->engine]->poly;
     return c && c < NVOICE ? c : NVOICE;
 }
@@ -394,7 +395,7 @@ static void mono_remove(track_t *t, uint32_t note)
 
 static void trk_note_on(track_t *t, uint32_t note, uint32_t vel)
 {
-    uint32_t any = 0, i, mode = trk_vmode(t);
+    uint32_t i, mode = trk_vmode(t);
     if (t->p[P_MUTE])
         return;
     if (t->xf_on || t->eng_req != t->engine) {          /* engine switch under way: after the fade */
@@ -408,13 +409,7 @@ static void trk_note_on(track_t *t, uint32_t note, uint32_t vel)
         return;
     }
     vel = mod_note(t, note, vel);                       /* the matrix's VEL / KEY / RAND (1.5.6: VEL as a destination) */
-    for (i = 0; i < NVOICE; i++)
-        any |= t->v[i].gate;
-    if (!any) {                                        /* fresh phrase: LFO retrigger (TRIG NOTE) and fade */
-        if (!t->p[P_LTRIG])
-            t->lfo_ph = (uint32_t)t->p[P_LPHASE] << 25;
-        t->lfo_fade = 0;
-    }
+    /* DRIFT: note-on never resets the shared, continuously running LFO or its fade. */
     if (mode == V_POLY) {
         voice_t *v = voice_alloc(t, note);
         t->nmono = 0;                                   /* no stale mono stack after a mode change */

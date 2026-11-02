@@ -46,11 +46,19 @@ const before=p.flash();p.tap(7);p.tap(7);p.tap(6);p.tap(6);assert.deepEqual(p.fl
 p.tap(6);p.tap(6);assert.deepEqual(p.flash(),before,'delete No leaves flash intact');
 p.tap(6);p.turn(3,1);p.tap(6);assert.equal(p.e.web_test_user_preset(0),0);
 const deleted=await device(p.flash());assert.equal(deleted.e.web_test_user_preset(0),0,'deletion survives reboot');
-// Both controls on FX page 3 are exercised through the same UI as the hardware.
+// Existing Misc controls on FX page 4 are exercised through the same UI as the hardware.
 let worst=0;
 for(let dt=0;dt<3;dt++)for(let rt=0;rt<6;rt++){
- const f=await device();f.tap(0);f.turn(3,127);f.turn(5,127);f.turn(6,dt);f.tap(0);f.turn(3,127);f.turn(4,127);f.turn(5,-127);f.turn(5,rt);f.turn(6,127);f.tap(0);f.turn(5,127);f.e.web_keys(0x5555);
+ const f=await device();f.tap(0);f.turn(3,127);f.turn(5,127);f.turn(6,dt);f.tap(0);f.turn(3,127);f.turn(4,127);f.turn(5,-127);f.turn(5,rt);f.turn(6,127);f.tap(0);for(let knob=3;knob<=6;knob++)f.turn(knob,127);f.tap(0);f.turn(5,127);f.e.web_keys(0x5555);
  const start=performance.now();f.render(3000);worst=Math.max(worst,(performance.now()-start)/1000);
  assert(f.stats().peak>0.001&&f.stats().peak<=1);f.e.web_keys(0);
 }
 console.log(JSON.stringify({result:'PASS',checks:['overwrite No preserves flash','delete No preserves flash','delete Yes persists after reboot','all 18 FX combinations / eight held notes'],worstRender3SecondsWallTime:worst},null,2));
+
+// Physical sources, real browser build: selection, 8 held keys, preset storage.
+for(const wave of [10,11,12,13]){
+ const p=await device();p.tap(5);p.turn(3,-127);p.turn(3,wave);p.e.web_keys(0x5555);p.render(3000);p.e.web_keys(0);p.render(500);
+ assert(p.stats().peak>0.001&&p.stats().peak<=1);p.tap(7);p.turn(5,1);p.tap(7);
+ const q=await device(p.flash());q.e.web_keys(0x5555);q.render(2000);assert(q.stats().peak>0.001&&q.stats().peak<=1);
+}
+console.log('PASS: STRING, RESONATOR, BOWED and AIR finite audio, eight-key stress and flash restore in fresh WASM instances.');

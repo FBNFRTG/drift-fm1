@@ -1,5 +1,41 @@
 # DRIFT changelog
 
+## 0.9.6 — Musical sequence TIME
+
+- Replace previous swing/jitter/clustering with progressively activated rhythmic pairs on a 1/32 grid: straight and dotted lengths, short subdivisions and rests.
+- TIME 0 retains original Euclidean starts and duration. Higher intensity creates stronger short/long contrast; pitch and probability stay independent.
+- Draw per-event note lengths in the piano roll. Repeat the generated loop exactly, preserving playback position on edits.
+- Existing storage, patches and samples are unchanged. Patches with TIME above zero intentionally use the new rhythm.
+- Add exhaustive bar/count/intensity tests plus live transport, gate duration and persistence checks.
+
+## 0.9.5 — Sustained, breathy pads and drones
+
+- Append BOWED and AIR to WAVE. Continuous filtered excitation feeds a harmonic string/body, with a little filtered exciter mixed in for breath and friction; no initial strike is used.
+- GLO 1: WAVE, TEXTURE, SOFT, LEVEL for these two sources. Common ADSR controls attack, sustain and release. Three voices, existing engine memory.
+- Add HUSHED BOW, BREATH VEIL, HOARSE TIDE and SLOW HAZE: slow attacks, long releases, gentle tape warmth and slow sequences.
+- Expand patch list capacity to include the full bank and all favourite duplicates.
+
+## 0.9.4 — String and resonator sources
+
+- Append STRING and RESONATOR to oscillator 1 WAVE, preserving waveform IDs 0–9. Reuses Felucca’s MIT DaisySP-derived Karplus-Strong and modal DSP in the existing engine memory.
+- GLO 1: WAVE, MATERIAL, DAMP, LEVEL for these sources. More DAMP makes the body shorter/darker. Filter, ADSR, oscillator 2 and effects remain available.
+- Three voices for physical sources; eight for existing analog sources. The models use a plucked/struck exciter, so long ADSR attacks can soften or hide the initial strike.
+- New factory patches appended: SOFT STRING, DUST HARP, WOOD KEYS, GLASS BODY.
+- Patch record size, flash layout and all previous patch IDs remain unchanged. New waves require 0.9.4; earlier releases cannot reproduce them.
+
+## 0.9.3 — Tape character
+
+- SAVE layout: three knob labels in a horizontal row, patch name below, then HOME: CANCEL and SAVE: STORE side by side.
+- FX 3/4: TAPE soft saturation, slow WOW, faster FLUTTER, and WARMTH (gentle saturation, high-frequency damping and subtle independent pitch drift). Stereo processing after delay/reverb and before master volume; smoothed controls; all-zero bypass.
+- Existing Misc controls move to FX 4/4.
+- Four appended factory patches: VELVET TAPE, WORN CLOUD, DUST BASS, FELT ECHO. Existing factory patch IDs stay fixed.
+- Four unused FM3 fields plus spare record byte 141 mark new saved values. Record size and flash addresses are unchanged. Old records load all four controls at zero.
+
+## 0.9.2 — Free-running LFO and random patch names
+
+- New notes no longer restart LFO phase or fade, including existing patches.
+- SAVE: turn KNOB 3 for another ambient-style name. KNOB 1/2 still edit it; SAVE stores it with the usual overwrite confirmation. Name generation does not change the musical random stream.
+
 ## 0.9.1 — Display corrections
 
 - Delay Time bar follows ascending duration rather than stored enum IDs. Audio and saved values are unchanged.
@@ -16,7 +52,7 @@
 - Delay Time is ordered from short to long, with straight, dotted and triplet values up to 4 bars. Durations are now realised rather than clipped to the buffer. Long delays reduce the delay-line sample rate and therefore sound darker. At 40 BPM, 4 bars = 24 seconds per delay interval / reverse segment.
 - Tone now shapes the reverb input; Damp controls the reverb tail. The former stored delay Tone value becomes Reverb Tone. Delay feedback colour is fixed at its former default.
 - Patch and sample addresses and 192-byte patch record size are unchanged. CHAOS values above 127 use previously unused record bytes. Old patches load, but nonzero Chaos patterns and FX colour can sound different. Downgrading cannot reproduce the new options.
-- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.1.
+- FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.6.
 
 # 0.8 — 2026-10-23
 

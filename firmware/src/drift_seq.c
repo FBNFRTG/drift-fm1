@@ -4,7 +4,7 @@
  */
 static struct {
  uint32_t rng,pos,cycle,sig,serial;
- uint16_t phase[32];
+ uint16_t phase[32],gate32[32];
  uint8_t note[32],enabled[32],velocity[32],pool[128],pool_n,count,was_playing;
  uint32_t off[128];
 } drift_gen;
@@ -44,6 +44,56 @@ static int drift_interval_degree(int degree,uint32_t interval){
  for(int k=0;k<n;k++)sum+=patterns[clamp(interval-8,0,7)][k%lengths[clamp(interval-8,0,7)]];
  return sign*sum;
 }
+/* Musical rhythm, in 1/32 notes. TIME is intensity, never a random seed.
+ * A fixed permutation progressively activates pairs. Pair anchors stay fixed;
+ * their inner boundary moves to a shorter musical interval as intensity rises.
+ * This keeps note count, order and loop length, and cannot create collisions.
+ */
+static uint16_t drift_rhythm_value(uint32_t limit){
+ static const uint16_t values[]={1,2,3,4,6,8,12,16,24,32,48,64,96,128,192,256,384,512};
+ uint16_t value=1;for(uint32_t i=0;i<NELEM(values) && values[i]<=limit;i++)value=values[i];return value;
+}
+static uint32_t drift_rhythm_rand(uint32_t *state){
+ uint32_t x=*state;x^=x<<13;x^=x>>17;x^=x<<5;return *state=x;
+}
+static void drift_rhythm(uint32_t steps,uint32_t time){
+ uint32_t count=drift_gen.count,grid=steps*2u,base=(uint32_t)clamp(trk[0].p[P_DDUR],1,64)*2u;
+ uint16_t at[32];uint8_t order[16];
+ for(uint32_t i=0;i<count;i++){at[i]=(uint16_t)(2u*(i*steps/count));drift_gen.gate32[i]=(uint16_t)base;}
+ if(!time)return;
+ uint32_t pairs=count/2u,seed=0x86D12B49u^(steps<<16)^count;
+ for(uint32_t i=0;i<pairs;i++)order[i]=(uint8_t)i;
+ for(uint32_t i=pairs;i>1;i--){uint32_t j=drift_rhythm_rand(&seed)%i;uint8_t v=order[i-1];order[i-1]=order[j];order[j]=v;}
+ for(uint32_t rank=0;rank<pairs;rank++){
+  uint32_t pair=order[rank],a=pair*2u,b=a+1u;
+  uint32_t end=b+1u<count?at[b+1u]:grid,span=end-at[a];
+  uint32_t left=at[b]-at[a],right=end-at[b],small=left<right?left:right;
+  uint32_t bits=drift_rhythm_rand(&seed);
+  if(time*pairs<=rank*100u)continue;
+  uint32_t divisor=time<34?2u:time<67?4u:8u;
+  uint32_t short_gap=drift_rhythm_value(small/divisor);
+  uint32_t gap0=(bits&1u)?short_gap:span-short_gap,gap1=span-gap0;
+  at[b]=(uint16_t)(at[a]+gap0);
+  uint32_t gaps[2]={gap0,gap1};
+  for(uint32_t k=0;k<2;k++){
+   uint32_t gap=gaps[k],limit=gap>short_gap?base*3u/2u:(base+1u)/2u;
+   if(limit>gap)limit=gap;
+   /* Shorten the long leg to leave an actual note-off/rest. Higher TIME
+    * introduces rests in more pairs; no probability/pitch random numbers used. */
+   if(gap>short_gap && time>=34u+rank*66u/(pairs?pairs:1u)){
+    uint32_t rest_limit=gap/(time<67?2u:4u);if(limit>rest_limit)limit=rest_limit;
+   }
+   drift_gen.gate32[a+k]=drift_rhythm_value(limit);
+  }
+ }
+ /* A single note (or the last odd note) can vary its gate without moving
+  * the loop anchor. At TIME 100 every gate fits its slot, leaving clear gaps. */
+ if((count&1u) && time>=34){
+  uint32_t last=count-1u,gap=grid-at[last],limit=time<67?base:base/2u;
+  if(limit>gap/2u)limit=gap/2u;drift_gen.gate32[last]=drift_rhythm_value(limit);
+ }
+ for(uint32_t i=0;i<count;i++)drift_gen.phase[i]=(uint16_t)((uint32_t)at[i]*65536u/grid);
+}
 static void drift_generate(void){
  int16_t *p=trk[0].p;uint32_t i,steps=16u*(uint32_t)clamp(p[P_DLEN],1,16);
  drift_gen.rng=0xA53C916Du;drift_gen.pool_n=0;
@@ -52,7 +102,7 @@ static void drift_generate(void){
  drift_gen.count=(uint8_t)clamp(p[P_DNOTES],1,steps<32?steps:32);
  for(i=0;i<drift_gen.count;i++){
   uint32_t slot=i*steps/drift_gen.count;
-  uint32_t begin=slot*65536u/steps,end=((i+1u)*steps/drift_gen.count)*65536u/steps;
+  uint32_t begin=slot*65536u/steps;
   uint32_t direction=(uint32_t)clamp(p[P_DPITCH],0,63),interval=(uint32_t)clamp(p[P_DOCT],0,15);
   int root=-1,degree=0;
   for(uint32_t j=0;j<drift_gen.pool_n;j++)if(drift_gen.pool[j]%12==p[P_ROOT] && (root<0 || ((int)drift_gen.pool[j]>60?(int)drift_gen.pool[j]-60:60-(int)drift_gen.pool[j])<((int)drift_gen.pool[root]>60?(int)drift_gen.pool[root]-60:60-(int)drift_gen.pool[root])))root=(int)j;
@@ -63,48 +113,34 @@ static void drift_generate(void){
   drift_gen.note[i]=root>=0?drift_gen.pool[clamp(root+degree,0,drift_gen.pool_n-1)]:0;
   drift_gen.enabled[i]=(uint8_t)(root>=0 && drift_rand()%100u<(uint32_t)p[P_DPROB]);
   drift_gen.velocity[i]=96;drift_gen.phase[i]=(uint16_t)begin;
-  uint32_t time=(uint32_t)clamp(p[P_DRATE],0,100),rnd=drift_rand();
-  if(time){
-   /* Swing, then irregular displacement, then clusters over the whole bar. */
-   int offset=(int)(end-begin)*(int)time/220;
-   if(time<34)offset=(i&1)?offset:0;
-   else offset=(int)(rnd%(2u*(uint32_t)offset+1u))-offset;
-   int pos=(int)begin+offset;
-   if(time>66){uint32_t cluster=(rnd>>12)%8;int target=(int)((begin/16384u)*16384u+cluster*2048u);pos+=(target-pos)*(int)(time-66)/34;}
-   drift_gen.phase[i]=(uint16_t)clamp(pos,0,65535);
-  }
+  (void)drift_rand(); /* preserve existing probability draws */
  }
  /* Values 1..999 choose independently seeded full permutations. No transport RNG. */
  if(p[P_DRHYTHM]>0){
   drift_gen.rng=0x9E3779B9u*(uint32_t)p[P_DRHYTHM]^0xA53C916Du;
   for(i=drift_gen.count;i>1;i--){uint32_t j=drift_rand()%i;uint8_t n=drift_gen.note[i-1];drift_gen.note[i-1]=drift_gen.note[j];drift_gen.note[j]=n;}
  }
- /* Sort timed events while preserving their assigned pitch/probability. */
- for(i=1;i<drift_gen.count;i++)for(uint32_t j=i;j && drift_gen.phase[j]<drift_gen.phase[j-1];j--){
-  uint16_t ph=drift_gen.phase[j];drift_gen.phase[j]=drift_gen.phase[j-1];drift_gen.phase[j-1]=ph;
-  uint8_t n=drift_gen.note[j];drift_gen.note[j]=drift_gen.note[j-1];drift_gen.note[j-1]=n;
-  n=drift_gen.enabled[j];drift_gen.enabled[j]=drift_gen.enabled[j-1];drift_gen.enabled[j-1]=n;
- }
+ drift_rhythm(steps,(uint32_t)clamp(p[P_DRATE],0,100));
 
  drift_gen.sig=drift_cfg_sig();drift_gen.serial++;
 }
-static void drift_fire_range(uint32_t start,uint32_t end,uint32_t len,uint32_t dur){
+static void drift_fire_range(uint32_t start,uint32_t end,uint32_t len){
  uint32_t i;for(i=0;i<drift_gen.count;i++){
   uint32_t due=(uint32_t)(((uint64_t)drift_gen.phase[i]*len)>>16),nt=drift_gen.note[i];
   if(due>=start && due<end && drift_gen.enabled[i]){
    if(drift_gen.off[nt])trk_note_off(&trk[0],nt);
-   trk_note_on(&trk[0],nt,drift_gen.velocity[i]);drift_gen.off[nt]=dur;last_note=(uint8_t)nt;
+   trk_note_on(&trk[0],nt,drift_gen.velocity[i]);drift_gen.off[nt]=beat_samples()*(uint32_t)drift_gen.gate32[i]/8u;last_note=(uint8_t)nt;
   }
  }
 }
 static void drift_tick(uint32_t n){
- uint32_t i,len,end,dur;
+ uint32_t i,len,end;
  if(!drift_gen.count || drift_gen.sig!=drift_cfg_sig()){drift_release();drift_generate();}
  if(!song.playing){if(drift_gen.was_playing)drift_release();drift_gen.was_playing=0;drift_gen.pos=0;return;}
  if(!drift_gen.was_playing)drift_gen.pos=0;drift_gen.was_playing=1;
  for(i=0;i<128;i++)if(drift_gen.off[i]){if(drift_gen.off[i]<=n){trk_note_off(&trk[0],i);drift_gen.off[i]=0;}else drift_gen.off[i]-=n;}
- len=drift_loop_samples();dur=beat_samples()*(uint32_t)clamp(trk[0].p[P_DDUR],1,64)/4u;
+ len=drift_loop_samples();
  if(drift_gen.pos>=len)drift_gen.pos%=len;
- end=drift_gen.pos+n;drift_fire_range(drift_gen.pos,end<len?end:len,len,dur);drift_gen.pos=end;
- if(end>=len){drift_gen.pos=end-len;drift_gen.cycle++;drift_fire_range(0,drift_gen.pos,len,dur);}
+ end=drift_gen.pos+n;drift_fire_range(drift_gen.pos,end<len?end:len,len);drift_gen.pos=end;
+ if(end>=len){drift_gen.pos=end-len;drift_gen.cycle++;drift_fire_range(0,drift_gen.pos,len);}
 }

@@ -10,7 +10,7 @@
  *         every pair (OSC 2 alone at 127)
  *   SUB   OSC 1 a saw, OSC 2 a square an octave below it (detuned by DTN in cents as before): MIX (shown SUB) is the
  *         sub oscillator's level */
-static const char *const N_ANALOG_WAVE[] = {"SAW", "SQR", "TRI", "SIN", "PWM", "SYNC", "SUB", "SAMPLE 1", "SAMPLE 2", "SAMPLE 3"};
+static const char *const N_ANALOG_WAVE[] = {"SAW", "SQR", "TRI", "SIN", "PWM", "SYNC", "SUB", "SAMPLE 1", "SAMPLE 2", "SAMPLE 3", "STRING", "RESONATOR", "BOWED", "AIR"};
 enum { AW_SYNC = 5, AW_SUB = 6 };
 static const param_desc_t ANALOG_SYNC = {"SYNC", F_INT, 0, 127, 10, 0, 0};   /* DTN's range and default */
 static const param_desc_t ANALOG_SUB = {"SUB", F_PCT, 0, 127, 64, 0, 0};      /* MIX's */
@@ -34,6 +34,11 @@ static inline int32_t analog_tap(const tsvf_t *c, int32_t k, int32_t in, int32_t
 
 static const param_desc_t *analog_desc(const track_t *t, uint32_t k)
 {
+    if(t->p[P_E0]>=10 && (k==1u || k==2u)){
+        static const param_desc_t material={"MATERIAL",F_PCT,0,127,34,0,0};
+        static const param_desc_t damping={"DAMP",F_PCT,0,127,43,0,0};
+        return k==1u?&material:&damping;
+    }
     if (k == 1u && t->p[P_E0] == AW_SYNC)
         return &ANALOG_SYNC;
     if (k == 2u && t->p[P_E0] == AW_SUB)
@@ -46,6 +51,7 @@ static void analog_note_on(track_t *t, voice_t *v)
 #ifdef DRIFT_SAMPLES
     drift_osc_phase[t-trk][v-t->v]=0;
     drift_wave_tag[t-trk][v-t->v]=(uint8_t)(t->p[P_E0]+1);
+    if(t->p[P_E0]>=10){drift_physical_on(t,v);return;}
     if(t->p[P_E0]>=7){drift_sample_on(t,v);return;}
 #endif
     (void)t;
@@ -202,6 +208,7 @@ static void analog_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, cons
 {
 #ifdef DRIFT_SAMPLES
     if(drift_wave_tag[t-trk][v-t->v]!=(uint8_t)(t->p[P_E0]+1)){v->active=0;return;}
+    if(t->p[P_E0]>=10){drift_physical_render(t,v,out,n,m);return;}
     if(t->p[P_E0]>=7){drift_sample_render(t,v,out,n,m);return;}
 #endif
     if (t->p[P_E0] >= AW_SYNC)
@@ -234,13 +241,28 @@ static const preset_t ANALOG_PRESETS[] = { /* DRIFT ambient bank, 2026 */
     {"FIFTH LIGHT", {2, 3, 45, 0, 82, 8, 0, 24}, {12, 82, 70, 92}, 12, 0, FX(0, 22, 40, 65), PAT(0)},
     {"DEEP PAIR", {3, 0, 0, 0, 48, 4, 10, 12}, {10, 70, 112, 54}, 4, 1, FX(0, 0, 0, 8), PAT(0)},
     {"AIR & SALT", {0, 4, 52, 0, 71, 22, 3, 24}, {69, 103, 88, 110}, 14, 0, FX(0, 18, 16, 64), PAT(0)},
+    {"VELVET TAPE", {0, 11, 56, 0, 64, 10, 0, 28}, {82, 92, 110, 106}, 8, 0, FX(0, 26, 20, 78), PAT(0)},
+    {"WORN CLOUD", {2, 6, 46, 0, 72, 9, 0, 28}, {104, 94, 108, 116}, 7, 0, FX(0, 18, 28, 88), PAT(0)},
+    {"DUST BASS", {6, 3, 96, 0, 54, 12, 0, 18}, {8, 72, 104, 50}, 10, 1, FX(0, 0, 8, 10), PAT(0)},
+    {"FELT ECHO", {2, 4, 42, 0, 76, 12, 0, 38}, {3, 76, 0, 80}, 26, 0, FX(0, 12, 48, 60), PAT(0)},
+    {"SOFT STRING", {10, 34, 43, 0, 98, 8, 0, 24}, {0, 100, 127, 80}, 0, 0, FX(0, 0, 24, 48), PAT(0)},
+    {"DUST HARP", {10, 68, 30, 0, 90, 8, 0, 20}, {0, 100, 127, 94}, 0, 0, FX(0, 0, 42, 64), PAT(0)},
+    {"WOOD KEYS", {11, 34, 75, 0, 86, 4, 0, 16}, {0, 100, 127, 58}, 0, 0, FX(0, 0, 18, 38), PAT(0)},
+    {"GLASS BODY", {11, 70, 30, 0, 112, 5, 0, 16}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 32, 78), PAT(0)},
+    {"HUSHED BOW", {12, 40, 76, 0, 80, 8, 0, 12}, {88, 100, 118, 110}, 0, 0, FX(0, 14, 22, 80), PAT(0)},
+    {"BREATH VEIL", {13, 52, 88, 0, 84, 6, 0, 12}, {100, 110, 120, 118}, 0, 0, FX(0, 12, 18, 88), PAT(0)},
+    {"HOARSE TIDE", {12, 94, 64, 0, 78, 10, 0, 12}, {78, 100, 120, 108}, 0, 0, FX(0, 16, 24, 76), PAT(0)},
+    {"SLOW HAZE", {13, 72, 104, 0, 76, 5, 0, 8}, {110, 110, 127, 122}, 0, 0, FX(0, 10, 16, 92), PAT(0)},
 };
 
 static const engine_t ENG_ANALOG = {
     .name = "ANALOG",
+#ifdef DRIFT_SAMPLES
+    .mem = ENG_MEM_PART, /* new physical waves use the existing per-part memory */
+#endif
     .page_title = {"OSC", "FLT"},
     .edit = {
-        {"WAVE", F_ENUM, 0, 9, 0, N_ANALOG_WAVE, 0},
+        {"WAVE", F_ENUM, 0, 13, 0, N_ANALOG_WAVE, 0},
         {"DTN", F_INT, 0, 127, 10, 0, "ct"},
         {"MIX", F_PCT, 0, 127, 64, 0, 0},
         {"NOIS", F_PCT, 0, 127, 0, 0, 0},

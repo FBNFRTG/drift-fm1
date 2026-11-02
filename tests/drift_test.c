@@ -79,7 +79,7 @@ static void fx_tests(void){
  assert(trk[0].p[P_DLY]==127 && song.g[G_DFDBK]==120 && trk[0].p[P_DDELAY]==2);screen_file("build/drift-delay.ppm");
  tap(B_FX);assert(drift_page==D_SPACE);web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
  assert(trk[0].p[P_REV]==127 && song.g[G_RSIZE]==127 && song.g[G_RTYPE]==5 && trk[0].p[P_DCOLOR]==127);screen_file("build/drift-reverb.ppm");
- tap(B_FX);assert(drift_page==D_TYPES);web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
+ tap(B_FX);assert(drift_page==D_TAPE);tap(B_FX);assert(drift_page==D_TYPES);web_enc(EN_K1,127);web_enc(EN_K2,127);web_enc(EN_K3,127);web_enc(EN_K4,127);advance_ms(40);
  assert(trk[0].p[P_CHOR]==127 && song.g[G_RDAMP]==127 && trk[0].p[P_DMOD]==127 && trk[0].p[P_LEVEL]==127);screen_file("build/drift-misc.ppm");
  // Worst controls, eight voices, all 18 type combinations: bounded audio.
  for(int dt=0;dt<3;dt++)for(int rt=0;rt<6;rt++){
@@ -128,7 +128,7 @@ int main(void){
  drift_load(0);test_home();
  assert(SMP_USER_BASE+3*SMP_USER_SIZE==0xDC000u);
  for(int i=1;i<4;i++)assert(trk[i].p[P_MUTE]);for(int i=0;i<3;i++)assert(usr_nz[i]==1);
- assert(drift_list_n==23);tap(B_REC);assert(drift_fav(0)&&drift_list_n==24);screen_file("build/drift-home.ppm");
+ assert(drift_list_n==ENG_ANALOG.npresets+2);tap(B_REC);assert(drift_fav(0)&&drift_list_n==ENG_ANALOG.npresets+3);screen_file("build/drift-home.ppm");
  tap(B_GLO);assert(drift_page==D_OSC);screen_file("build/drift-osc.ppm");tap(B_EDIT);assert(drift_page==D_FILTER);
  tap(B_ENV);assert(drift_page==D_ENV);screen_file("build/drift-env.ppm");
  tap(B_FX);assert(drift_page==D_FX);screen_file("build/drift-fx.ppm");tap(B_FX);assert(drift_page==D_SPACE);screen_file("build/drift-space.ppm");

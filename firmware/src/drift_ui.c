@@ -9,19 +9,19 @@ static uint32_t drift_time_index(int value){
  for(uint32_t i=0;i<sizeof D_TIME_ORDER;i++)if(D_TIME_ORDER[i]==value)return i;
  return 0;
 }
-enum { D_HOME, D_OSC, D_FILTER, D_ENV, D_LFO, D_FX, D_SPACE, D_SCL, D_SEQ1, D_SEQ2, D_OSC2, D_SCL2, D_TYPES };
+enum { D_HOME, D_OSC, D_FILTER, D_ENV, D_LFO, D_FX, D_SPACE, D_SCL, D_SEQ1, D_SEQ2, D_OSC2, D_SCL2, D_TYPES, D_TAPE };
 static uint8_t drift_page, drift_dirty, drift_ready;
 static int drift_row;
 static uint32_t drift_draw_ms,drift_overlay_ms;
 static uint8_t drift_overlay;
-static const char *const D_TITLE[]={"PATCHES","OSCILLATOR 1","FILTER","ENVELOPE","MODULATION","DELAY","REVERB","SCALE","SEQUENCE 1","SEQUENCE 2","OSCILLATOR 2","SCALE KEYS","MISC"};
+static const char *const D_TITLE[]={"PATCHES","OSCILLATOR 1","FILTER","ENVELOPE","MODULATION","DELAY","REVERB","SCALE","SEQUENCE 1","SEQUENCE 2","OSCILLATOR 2","SCALE KEYS","MISC","TAPE"};
 static const uint8_t D_PARAMS[][4]={
  {P_E4,P_E5,P_ATK,P_REL},{P_E0,P_E1,P_E2,P_DLV1},{P_E4,P_E5,P_ED_FLT,P_E6},
  {P_ATK,P_DEC,P_SUS,P_REL},{P_LRATE,P_LD_FLT,P_DDEST,P_LD_AMP},
  {P_DLY,P_DR2,P_DR3,P_DDELAY},{P_REV,P_DR0,P_DR5,P_DCOLOR},
  {P_ROOT,P_SCALE,P_DMIN,P_DMAX},{P_DLEN,P_DNOTES,P_DDUR,P_DPROB},
  {P_DPITCH,P_DOCT,P_DRHYTHM,P_DRATE},
- {P_D2W,P_D2T,P_D2LV,255},{P_DLED,P_DONLY,255,255},{P_CHOR,P_DR1,P_DMOD,P_LEVEL}
+ {P_D2W,P_D2T,P_D2LV,255},{P_DLED,P_DONLY,255,255},{P_CHOR,P_DR1,P_DMOD,P_LEVEL},{P_DTAPE,P_DWOW,P_DFLUT,P_DWARM}
 };
 static const char *const D_LABEL[][4]={
  {"CUT","RES","ATK","REL"},{"WAVE","DETUNE","MIX","LEVEL"},
@@ -29,7 +29,7 @@ static const char *const D_LABEL[][4]={
  {"RATE","FILTER","TARGET","DEPTH"},{"DELAY %","TIME","FDBK","TYPE"},
  {"REVERB %","SIZE","TYPE","TONE"},{"ROOT","SCALE","MIN","MAX"},
  {"BARS","NOTES","DUR /16","PROB %"},{"DIR","INTERVAL","CHAOS","TIME"},
- {"WAVE","TUNE","LEVEL",""},{"LED","SCALE ONLY","",""},{"CHORUS","DAMP","MOTION","LEVEL"}
+ {"WAVE","TUNE","LEVEL",""},{"LED","SCALE ONLY","",""},{"CHORUS","DAMP","MOTION","LEVEL"},{"TAPE","WOW","FLUTTER","WARMTH"}
 };
 static const char *const D_DELAYS[]={"CLASSIC","PING PONG","REVERSE"};
 static const char *const D_WAVES[]={"OFF","SAW","SQUARE","TRI","SINE","PULSE"};
@@ -46,14 +46,16 @@ static const param_desc_t *drift_desc(uint32_t id){
  static const param_desc_t tune={.fmt=F_INT,.min=40,.max=88};
  if(id==P_DLED || id==P_DONLY)return &led;
  if(id==P_D2W)return &wave;if(id==P_D2T)return &tune;
- if(id==P_DLV1 || id==P_D2LV || id==P_DCOLOR || id==P_DMOD)return &level;
+ if(id==P_DTAPE || id==P_DWOW || id==P_DFLUT || id==P_DWARM || id==P_DLV1 || id==P_D2LV || id==P_DCOLOR || id==P_DMOD)return &level;
+ if(id>=P_E0){const param_desc_t *d=analog_desc(&trk[0],id-P_E0);if(d)return d;}
  return id>=P_E0?&ENG_ANALOG.edit[id-P_E0]:&TP[id];
 }
 static void drift_new_params(void){
  int16_t *p=trk[0].p;p[P_DLED]=0;p[P_DONLY]=0;p[P_DLV1]=127;
+ p[P_DTAPE]=p[P_DWOW]=p[P_DFLUT]=p[P_DWARM]=0;
  p[P_DDEST]=D_LFO_VOLUME;p[P_D2W]=0;p[P_D2T]=64;p[P_D2LV]=80;p[P_DFMT]=1;p[P_DDELAY]=0;p[P_DCOLOR]=70;p[P_DMOD]=32;
 }
-static uint16_t drift_list[128];
+static uint16_t drift_list[2*(NELEM(ANALOG_PRESETS)+UP_SLOTS)];
 static uint32_t drift_list_n;
 static uint32_t drift_id(void){return trk[0].user ? 256u+trk[0].user-1u : trk[0].preset;}
 static int drift_fav(uint32_t id){return favorite_has(id>=256?NENGINES:0,id>=256?id-256:id);}
@@ -84,6 +86,18 @@ static void drift_load(uint32_t id) {
  }
  if(trk[0].p[P_DFMT]>1)drift_new_params();
  if(!trk[0].p[P_DFMT]){trk[0].p[P_DDELAY]=0;trk[0].p[P_DCOLOR]=70;trk[0].p[P_DMOD]=32;trk[0].p[P_DFMT]=1;}
+ if(id>=21 && id<=24){
+  static const uint8_t tape[4][4]={{42,28,9,76},{30,58,23,65},{82,10,18,58},{48,20,31,82}};
+  int16_t *p=trk[0].p;const uint8_t *v=tape[id-21];
+  p[P_DTAPE]=v[0];p[P_DWOW]=v[1];p[P_DFLUT]=v[2];p[P_DWARM]=v[3];
+  if(id==21 || id==22){p[P_D2W]=4;p[P_D2T]=64;p[P_D2LV]=48;}
+  if(id==23){p[P_DMIN]=24;p[P_DMAX]=47;}
+ }
+ if(id>=29 && id<=32){
+  int16_t *p=trk[0].p;p[P_DTAPE]=id==31?32:12;p[P_DWARM]=id==32?48:32;
+  p[P_DWOW]=8;p[P_DFLUT]=3;p[P_LRATE]=15;p[P_LD_FLT]=4;
+  p[P_DLEN]=4;p[P_DNOTES]=4;p[P_DDUR]=16;
+ }
  drift_global_load();
  trk[0].p[P_AMODE]=0; trk[0].p[P_CHRD]=0; drift_dirty=0; ui.force=1;
 }
@@ -142,6 +156,23 @@ static void drift_delete_patch(void){
  else{drift_load(15);trk[0].user=0;drift_row=0;} /* INIT remains playable when list is empty */
  drift_page=D_HOME;ui.force=1;
 }
+/* Independent name generator: never consumes the musical random stream. */
+static uint32_t drift_name_rng;
+static uint32_t drift_name_last=0xFFFFFFFFu;
+static void drift_random_name(void){
+ static const char *const a[]={"SOFT","DEEP","PALE","WARM","DARK","SLOW","BLUE","QUIET","LUNAR","DUSK","SILK","GOLD","LOST","STILL","GLASS","FAINT"};
+ static const char *const b[]={"TIDE","MIST","GLOW","WAVE","DUST","RAIN","ECHO","MOON","DAWN","HUSH","SEA","AIR","BLOOM","SHORE","DRIFT","LIGHT"};
+ uint32_t r=drift_name_rng;
+ if(!r)r=fm1_ms^0xA531B7C9u;
+ r^=r<<13;r^=r>>17;r^=r<<5;drift_name_rng=r;
+ uint32_t pick=r&255u;if(pick==drift_name_last)pick=(pick+1)&255u;
+ drift_name_last=pick;
+ nm_commit();nm.rep=0;
+ str_cpy(nm.s,a[pick>>4],sizeof nm.s);
+ uint32_t n=str_len(nm.s);nm.s[n++]=' ';
+ str_cpy(nm.s+n,b[pick&15],sizeof nm.s-n);
+ nm.len=(uint8_t)str_len(nm.s);nm.cur=0;ui.force=1;
+}
 static void drift_input(void) {
  uint32_t pressed=fm1_input_edges(0),notes=fm1_input_note_edges(),b,k;int32_t s;
  song.sel=0; song.rec=0;
@@ -158,6 +189,8 @@ static void drift_input(void) {
  if(name_on()) {
   uint32_t cancel=((pressed>>panel.btn[B_OCTDN])&1u)|((pressed>>panel.btn[B_HOME])&1u);
   uint32_t save=((pressed>>panel.btn[B_OCTUP])&1u)|((pressed>>panel.btn[B_SAVE])&1u);
+  s=panel_enc(EN_K3);
+  if(!cancel)for(int n=0;n<(s<0?-s:s);n++)drift_random_name();
   name_input(notes,cancel?1:0);
   if(name_on() && save)drift_prepare_save();
   if(!name_on()){song.grid=0;drift_page=D_HOME;ui.force=1;}
@@ -170,7 +203,7 @@ static void drift_input(void) {
    case B_EDIT:drift_page=D_FILTER;break;
    case B_ENV:drift_page=D_ENV;break;
    case B_LFO:drift_page=D_LFO;break;
-   case B_FX:drift_page=drift_page==D_FX?D_SPACE:drift_page==D_SPACE?D_TYPES:D_FX;break;
+   case B_FX:drift_page=drift_page==D_FX?D_SPACE:drift_page==D_SPACE?D_TAPE:drift_page==D_TAPE?D_TYPES:D_FX;break;
    case B_GLO:drift_page=drift_page==D_OSC?D_OSC2:D_OSC;break;
    case B_SCL:drift_page=drift_page==D_SCL?D_SCL2:D_SCL;break;
    case B_SEQ:drift_page=D_SEQ2;break;
@@ -241,6 +274,15 @@ static void drift_wave_graph(void){
   if(!p[P_D2W]){draw_text_line(12,143,216,&AF_M,"OSCILLATOR OFF",65535,0,1);return;}
   int last=150;for(int x=0;x<216;x++){int y=150-(int)((int64_t)drift_wave_shape(p[P_D2W]-1,(uint32_t)((uint64_t)x*0x100000000ull/108))*p[P_D2LV]*45/(32768*127));if(x)drift_line(11+x,last,12+x,y,65535);last=y;}return;
  }
+ if(wave>=10){
+  int last=150;for(int x=0;x<216;x++){
+   uint32_t ph=(uint32_t)((uint64_t)x*0x100000000ull/36u);
+   int32_t a=osc_sine(ph),b=osc_sine(ph*(wave==10?2u:3u)+(uint32_t)p[P_E1]*0x1000000u);
+   int y=150-(a+b/3)*(wave>=12?180:216-x)*p[P_DLV1]/127/216/900;
+   if(x)drift_line(11+x,last,12+x,y,65535);last=y;
+  }
+  draw_text_line(12,185,216,&AF_S,wave==10?"STRING / 3 VOICES":wave==11?"RESONATOR / 3 VOICES":wave==12?"BOWED / 3 VOICES":"AIR / 3 VOICES",65535,0,1);return;
+ }
  if(wave>=7){
   uint32_t k=wave-7;char label[16];
   if(k>=SMP_USER_SLOTS || !usr_nz[k]){draw_text_line(12,143,216,&AF_M,"EMPTY SAMPLE",65535,0,1);return;}
@@ -281,13 +323,13 @@ static void drift_env_graph(void){
  drift_line(x,sy,x+rw,y,65535);
 }
 static void drift_roll(void){
- uint32_t i,bars=(uint32_t)trk[0].p[P_DLEN],dur=(uint32_t)trk[0].p[P_DDUR];
+ uint32_t i,bars=(uint32_t)trk[0].p[P_DLEN];
  int lo=trk[0].p[P_DMIN],hi=trk[0].p[P_DMAX],span=hi-lo+1;
  /* only a bar grid and C guides; no heavy piano-key illustration */
  for(i=0;i<=bars;i++){uint32_t x=12+216u*i/bars;for(uint32_t y=103;y<198;y+=4)lcd_fill(x,y,1,1,65535);}
  for(i=0;i<(uint32_t)span;i++)if((lo+(int)i)%12==0){int y=194-88*(int)i/(span>1?span-1:1);for(int x=12;x<229;x+=6)lcd_fill(x,y,1,1,65535);}
  for(i=0;i<drift_gen.count;i++)if(drift_gen.enabled[i]){
-  uint32_t x=12+216u*drift_gen.phase[i]/65536u,w=216u*dur/(bars*16u);int y=193-88*((int)drift_gen.note[i]-lo)/(span>1?span-1:1);
+  uint32_t x=12+216u*drift_gen.phase[i]/65536u,w=216u*drift_gen.gate32[i]/(bars*32u);int y=193-88*((int)drift_gen.note[i]-lo)/(span>1?span-1:1);
   if(w<2)w=2;if(w>216)w=216;uint32_t first=x+w>228?228-x:w;
   if(first)lcd_fill(x,y,first,3,65535);if(w>first)lcd_fill(12,y,w-first,3,65535);
  }
@@ -301,7 +343,8 @@ static void drift_columns(void){
   const param_desc_t *d=drift_desc(id);
   int val=trk[0].p[id];
   const char *label=D_LABEL[drift_page][i];
-  if(drift_page==D_OSC && trk[0].p[P_E0]>=7 && i==2)label="LEVEL";
+  if(drift_page==D_OSC && trk[0].p[P_E0]>=7 && trk[0].p[P_E0]<=9 && i==2)label="LEVEL";
+  if(drift_page==D_OSC && trk[0].p[P_E0]>=10){if(i==1)label=trk[0].p[P_E0]>=12?"TEXTURE":"MATERIAL";if(i==2)label=trk[0].p[P_E0]>=12?"SOFT":"DAMP";}
   draw_text_line(x,49,width,&AF_S,label,65535,0,1);
   if(id==P_D2T){fmt_int(v,val-64);str_cpy(v+str_len(v),"st",sizeof v-str_len(v));}
   else if(id==P_DDELAY)str_cpy(v,((const char *const[]){"CLASSIC","PINGPONG","REVERSE"})[clamp(val,0,2)],sizeof v);
@@ -311,10 +354,11 @@ static void drift_columns(void){
   else if(id==P_DPITCH){if(!val)str_cpy(v,"ROOT",sizeof v);else{static const char *const modes[]={"UP","DN","UD","DU","BOUNCE","OUT","IN","PEDAL","WALK"};str_cpy(v,modes[clamp((val-1)/7,0,8)],sizeof v);fmt_int(b,(val-1)%7+1);str_cpy(v+str_len(v),b,sizeof v-str_len(v));}}
   else if(id==P_DOCT)str_cpy(v,((const char *const[]){"1ST","2ND","3RD","4TH","5TH","6TH","7TH","8VE","3/4","3/5","4/5","2/3","TRIAD","5/4","8/3","3/4/5"})[clamp(val,0,15)],sizeof v);
   else if(id==P_DLY || id==P_REV){fmt_int(v,(val*100+63)/127);str_cpy(v+str_len(v),"%",sizeof v-str_len(v));}
-  else if(id==P_E0 && val>=7){fmt_int(v,val-6);str_cpy(b,"SMP ",sizeof b);str_cpy(b+4,v,sizeof b-4);str_cpy(v,b,sizeof v);}
+  else if(id==P_E0 && val>=10)str_cpy(v,val==10?"STRING":val==11?"RESON.":val==12?"BOWED":"AIR",sizeof v);
+  else if(id==P_E0 && val>=7 && val<=9){fmt_int(v,val-6);str_cpy(b,"SMP ",sizeof b);str_cpy(b+4,v,sizeof b-4);str_cpy(v,b,sizeof v);}
   else {const char *unit;param_format(d,val,v,&unit);if(str_len(v)+str_len(unit)<8)str_cpy(v+str_len(v),unit,sizeof v-str_len(v));}
   draw_text_line(x,69,width,&AF_S,v,65535,0,1);
-  if(drift_page==D_FX || drift_page==D_SPACE || drift_page==D_TYPES || drift_page==D_FILTER){
+  if(drift_page==D_FX || drift_page==D_SPACE || drift_page==D_TYPES || drift_page==D_TAPE || drift_page==D_FILTER){
    uint32_t h=d->max>d->min?(uint32_t)(val-d->min)*(drift_page==D_FILTER?42u:94u)/(d->max-d->min):0;
    if(id==P_DR2)h=drift_time_index(val)*94u/(sizeof D_TIME_ORDER-1u);
    drift_line(x+9,196,x+45,196,65535);if(h)lcd_fill(x+18,196-h,18,h,65535);
@@ -333,7 +377,7 @@ static void drift_draw(void){
  draw_text_line(12,8,216,&AF_S,drift_dialog?"CONFIRM":name_on()?"SAVE PATCH":D_TITLE[drift_page],65535,0,0);
  if(!drift_dialog && !name_on() && (drift_page==D_SEQ1 || drift_page==D_OSC || drift_page==D_SCL))draw_text_line(93,8,54,&AF_S,"1/2",65535,0,1);
  if(!drift_dialog && !name_on() && (drift_page==D_SEQ2 || drift_page==D_OSC2 || drift_page==D_SCL2))draw_text_line(93,8,54,&AF_S,"2/2",65535,0,1);
- if(!drift_dialog && !name_on() && (drift_page==D_FX || drift_page==D_SPACE || drift_page==D_TYPES))draw_text_line(93,8,54,&AF_S,drift_page==D_FX?"1/3":drift_page==D_SPACE?"2/3":"3/3",65535,0,1);
+ if(!drift_dialog && !name_on() && (drift_page==D_FX || drift_page==D_SPACE || drift_page==D_TYPES || drift_page==D_TAPE))draw_text_line(93,8,54,&AF_S,drift_page==D_FX?"1/4":drift_page==D_SPACE?"2/4":drift_page==D_TAPE?"3/4":"4/4",65535,0,1);
  fmt_int(b,song.g[G_BPM]);str_cpy(b+str_len(b)," BPM",sizeof b-str_len(b));draw_text_line(157,8,71,&AF_S,b,65535,0,2);
  lcd_fill(12,34,216,1,65535);
  if(drift_dialog){
@@ -347,11 +391,14 @@ static void drift_draw(void){
   drift_octave_label();drift_frame_end();return;
  }
  if(name_on()){
-  /* SAVE AS is already in the header. */
-  for(i=0;i<nm.len;i++){char ch[2]={nm.s[i],0};draw_text_line(12+i*16,60,16,&AF_M,ch,65535,0,1);}
-  lcd_fill(12+nm.cur*16,85,12,2,65535);
-  draw_text_line(12,110,104,&AF_S,"1 CURSOR",65535,0,1);draw_text_line(124,110,104,&AF_S,"2 LETTER",65535,0,1);
-  drift_text(155,"SAVE / OCT+ : STORE",65535,0);drift_text(180,"HOME / OCT- : CANCEL",65535,0);drift_octave_label();drift_frame_end();return;
+  draw_text_line(12,49,72,&AF_S,"1 CURSOR",65535,0,1);
+  draw_text_line(84,49,72,&AF_S,"2 LETTER",65535,0,1);
+  draw_text_line(156,49,72,&AF_S,"3 RND NAME",65535,0,1);
+  for(i=0;i<nm.len;i++){char ch[2]={nm.s[i],0};draw_text_line(12+i*16,100,16,&AF_M,ch,65535,0,1);}
+  lcd_fill(12+nm.cur*16,125,12,2,65535);
+  draw_text_line(8,170,112,&AF_S,"HOME: CANCEL",65535,0,1);
+  draw_text_line(120,170,112,&AF_S,"SAVE: STORE",65535,0,1);
+  drift_octave_label();drift_frame_end();return;
  }
  if(drift_overlay && fm1_ms-drift_overlay_ms<500u){
   drift_text(49,drift_overlay==1?"LOW PASS":"TEMPO",65535,0);

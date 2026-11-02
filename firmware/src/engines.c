@@ -24,6 +24,8 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #define DRIFT_SAMPLES 1
 #include "drift_osc.c"
 static uint8_t drift_wave_tag[NPART][NVOICE];
+static void drift_physical_on(track_t *t, voice_t *v);
+static void drift_physical_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m);
 static void drift_sample_on(track_t *t, voice_t *v);
 static void drift_sample_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vmod_t *m);
 #include "../engines/src/eng_analog.c"   /* Felucca-Engines (MIT): ANALOG LOFI TRIO WHEEL NOISE */
@@ -36,6 +38,7 @@ static void drift_sample_render(track_t *t, voice_t *v, int32_t *out, uint32_t n
 #include "../engines/src/eng_wheel.c"
 #include "eng_grain.c"
 #include "eng_phys.c"           /* PHYS: DaisySP physical models (phys_dsp.c, MIT) */
+#include "drift_physical.c"
 #include "eng_drum.c"           /* DRUM: the 8-lane kit (drum_voice.c) */
 #include "../engines/src/eng_noise.c"
 #include "eng_fm6.c"            /* FM6: 6-operator FM, msfa ported (fm6_core.c, Apache-2.0) */
