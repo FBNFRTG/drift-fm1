@@ -75,3 +75,4 @@ Independent firmware; not affiliated with M-VAVE. [Impressum / Legal notice](htt
 - Patch and sample addresses and 192-byte patch record size are unchanged. CHAOS values above 127 use previously unused record bytes. Old patches load, but nonzero Chaos patterns and FX colour can sound different. Downgrading cannot reproduce the new options.
 - FM-1 identity stays FM-1_983; firmware, WASM and installer version 0.9.6.
 
+You can also try DRIFT in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
